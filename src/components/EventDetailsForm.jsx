@@ -321,12 +321,12 @@ export default function EventDetailsForm({ eventData, setEventData, onSubmit, on
               <select
                 value={eventData.status || 'upcoming'}
                 onChange={(e) => setEventData({ ...eventData, status: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', border: '1.5px solid #cbd5e1', borderRadius: '12px', fontSize: '13px', background: '#faf8f5' }}
+                style={{ width: '100%', padding: '12px 16px', border: '1.5px solid #cbd5e1', borderRadius: '12px', fontSize: '13px', background: '#faf8f5', fontWeight: 600, color: eventData.status === 'featured' ? '#92400e' : 'var(--navy)' }}
               >
-                <option value="upcoming">Upcoming</option>
-                <option value="featured">Featured</option>
-                <option value="registering">Registering</option>
-                <option value="completed">Completed</option>
+                <option value="upcoming">Upcoming Event</option>
+                <option value="featured">★ Featured Spotlight (Hero Spotlight Banner)</option>
+                <option value="registering">⚡ Registration Open</option>
+                <option value="completed">✓ Completed</option>
               </select>
             </div>
 

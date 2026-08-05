@@ -543,6 +543,10 @@ app.post('/api/admin/events', authAdmin, async (req, res) => {
     const scheduleStr = typeof schedule_cards === 'object' ? JSON.stringify(schedule_cards) : (schedule_cards || '');
     const subEventsStr = typeof sub_events === 'object' ? JSON.stringify(sub_events) : (sub_events || '');
 
+    if (status === 'featured') {
+      await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured'`);
+    }
+
     const result = await dbRun(
       `INSERT INTO events (
         title, subtitle, category, date_str, start_date, end_date, location,
@@ -576,6 +580,10 @@ app.put('/api/admin/events/:id', authAdmin, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Title, category, and location are required.' });
     }
 
+    if (status === 'featured') {
+      await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured' AND id != ?`, [req.params.id]);
+    }
+
     const computedDateStr = date_str || (start_date && end_date ? `${start_date} to ${end_date}` : start_date || '');
     const mainDescription = short_description || description || '';
     const customFieldsStr = typeof custom_fields === 'object' ? JSON.stringify(custom_fields) : (custom_fields || '');
@@ -601,6 +609,20 @@ app.put('/api/admin/events/:id', authAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error updating event:', err);
     res.status(500).json({ success: false, error: 'Failed to update event.' });
+  }
+});
+
+// Admin: Set Event as Featured Spotlight
+app.patch('/api/admin/events/:id/feature', authAdmin, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured'`);
+    await dbRun(`UPDATE events SET status = 'featured' WHERE id = ?`, [eventId]);
+
+    res.json({ success: true, message: 'Event successfully set as Featured Spotlight!' });
+  } catch (err) {
+    console.error('Error setting featured event:', err);
+    res.status(500).json({ success: false, error: 'Failed to update featured event.' });
   }
 });
 
