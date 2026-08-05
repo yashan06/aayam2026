@@ -13,6 +13,7 @@ export default function Admin() {
   // Data
   const [messages, setMessages] = useState([]);
   const [registrations, setRegistrations] = useState([]);
+  const [regEventFilter, setRegEventFilter] = useState('all');
   const [eventsList, setEventsList] = useState([]);
   const [teamList, setTeamList] = useState([]);
   const [galleryList, setGalleryList] = useState([]);
@@ -398,6 +399,30 @@ export default function Admin() {
     }
   };
 
+  const exportEventCSV = (eventTitle, regList) => {
+    const headers = ['ID', 'Registration Date', 'Student Name', 'Email', 'Phone', 'Roll Number', 'Branch', 'Year', 'Custom Responses'];
+    const rows = regList.map(r => [
+      r.id,
+      new Date(r.created_at).toLocaleDateString(),
+      `"${(r.student_name || '').replace(/"/g, '""')}"`,
+      `"${(r.student_email || '').replace(/"/g, '""')}"`,
+      `"${(r.phone || '').replace(/"/g, '""')}"`,
+      `"${(r.roll_number || '').replace(/"/g, '""')}"`,
+      `"${(r.branch || '').replace(/"/g, '""')}"`,
+      `"${(r.year || '').replace(/"/g, '""')}"`,
+      `"${(typeof r.custom_responses === 'string' ? r.custom_responses : JSON.stringify(r.custom_responses || '')).replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${(eventTitle || 'Event').replace(/[^a-z0-9]/gi, '_')}_Registrations.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // IF NOT LOGGED IN AS ADMIN
   if (!isAdminLoggedIn) {
     return (
@@ -628,64 +653,199 @@ export default function Admin() {
           </div>
         )}
 
-        {/* REGISTRATIONS TAB */}
-        {activeTab === 'registrations' && (
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', boxShadow: '0 4px 20px rgba(15,27,60,0.06)', border: '1px solid #e8e0d0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 700 }}>Student Event Registrations</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>Students registered for active campus events.</p>
+        {/* REGISTRATIONS TAB - EVENT-WISE */}
+        {activeTab === 'registrations' && (() => {
+          // Group registrations by event_title
+          const grouped = {};
+          registrations.forEach(r => {
+            const title = r.event_title || 'General Event';
+            if (!grouped[title]) {
+              grouped[title] = {
+                title,
+                event_id: r.event_id,
+                items: []
+              };
+            }
+            grouped[title].items.push(r);
+          });
+
+          const eventTitles = Object.keys(grouped);
+          const filteredTitles = regEventFilter === 'all' ? eventTitles : eventTitles.filter(t => t === regEventFilter);
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* TOP CONTROL BAR & EVENT SELECTOR PILLS */}
+              <div style={{ background: '#fff', borderRadius: '16px', padding: '24px 28px', boxShadow: '0 4px 20px rgba(15,27,60,0.06)', border: '1px solid #e8e0d0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '20px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 700 }}>
+                      Student Registrations (Event-Wise)
+                    </h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>
+                      Showing {registrations.length} total registrations organized by event.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => exportEventCSV('All_Events', registrations)}
+                      style={{ padding: '9px 18px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                    >
+                      📥 Export All CSV
+                    </button>
+                    <button
+                      onClick={loadRegistrations}
+                      style={{ padding: '9px 18px', border: '1.5px solid #cbd5e1', borderRadius: '8px', background: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--navy)' }}
+                    >
+                      🔄 Refresh List
+                    </button>
+                  </div>
+                </div>
+
+                {/* EVENT FILTER PILLS */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '6px' }}>Select Event:</span>
+                  <button
+                    onClick={() => setRegEventFilter('all')}
+                    style={{
+                      padding: '7px 16px',
+                      borderRadius: '20px',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      background: regEventFilter === 'all' ? 'var(--navy)' : '#f1f5f9',
+                      color: regEventFilter === 'all' ? '#ffffff' : '#475569',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    🌐 All Events ({registrations.length})
+                  </button>
+                  {eventTitles.map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setRegEventFilter(t)}
+                      style={{
+                        padding: '7px 16px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        background: regEventFilter === t ? 'var(--gold)' : '#f1f5f9',
+                        color: regEventFilter === t ? 'var(--navy)' : '#475569',
+                        transition: 'all 0.2s ease',
+                        boxShadow: regEventFilter === t ? '0 2px 8px rgba(197, 160, 89, 0.4)' : 'none'
+                      }}
+                    >
+                      🎟️ {t} ({grouped[t].items.length})
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button onClick={loadRegistrations} style={{ padding: '8px 16px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--navy)' }}>
-                🔄 Refresh
-              </button>
+
+              {/* EVENT-WISE CARDS LIST */}
+              {filteredTitles.length > 0 ? (
+                filteredTitles.map(t => {
+                  const evGroup = grouped[t];
+                  return (
+                    <div
+                      key={t}
+                      style={{
+                        background: '#fff',
+                        borderRadius: '16px',
+                        padding: '24px 28px',
+                        boxShadow: '0 4px 20px rgba(15,27,60,0.06)',
+                        border: '1.5px solid #e8e0d0'
+                      }}
+                    >
+                      {/* DEDICATED EVENT HEADER */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', paddingBottom: '16px', borderBottom: '2px solid #f1f5f9', flexWrap: 'wrap', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--navy), #1e3a73)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 800 }}>
+                            🎟️
+                          </div>
+                          <div>
+                            <h4 style={{ margin: 0, fontSize: '18px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 800 }}>
+                              {evGroup.title}
+                            </h4>
+                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                              Total Registrations: <strong style={{ color: 'var(--gold-dark)' }}>{evGroup.items.length} Students</strong>
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => exportEventCSV(evGroup.title, evGroup.items)}
+                          style={{
+                            padding: '7px 16px',
+                            background: '#f0fdf4',
+                            color: '#15803d',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          📄 Export {evGroup.title} CSV
+                        </button>
+                      </div>
+
+                      {/* DEDICATED EVENT REGISTRATION TABLE */}
+                      <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Reg ID</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Date</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Student Name</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Email</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Phone</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Roll No</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Branch</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Year</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Custom Answers</th>
+                              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {evGroup.items.map(r => (
+                              <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '12px 16px', color: '#94a3b8', fontWeight: 600 }}>#{r.id}</td>
+                                <td style={{ padding: '12px 16px', color: '#64748b' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                                <td style={{ padding: '12px 16px' }}><strong style={{ color: 'var(--navy)' }}>{r.student_name}</strong></td>
+                                <td style={{ padding: '12px 16px', color: '#475569' }}>{r.student_email}</td>
+                                <td style={{ padding: '12px 16px', color: '#475569' }}>{r.phone}</td>
+                                <td style={{ padding: '12px 16px' }}><code style={{ background: '#f1f5f9', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>{r.roll_number}</code></td>
+                                <td style={{ padding: '12px 16px', fontWeight: 600 }}>{r.branch}</td>
+                                <td style={{ padding: '12px 16px' }}>{r.year}</td>
+                                <td style={{ padding: '12px 16px', fontSize: '12px', color: '#334155' }}>
+                                  {renderCustomResponses(r.custom_responses)}
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <button onClick={() => deleteRegistration(r.id)} style={{ padding: '5px 12px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ background: '#fff', borderRadius: '16px', padding: '50px 20px', textAlign: 'center', color: '#94a3b8', border: '1px solid #e8e0d0' }}>
+                  <div style={{ fontSize: '36px', marginBottom: '10px' }}>🎟️</div>
+                  <h4 style={{ color: 'var(--navy)', margin: '0 0 6px', fontSize: '18px' }}>No Event Registrations Found</h4>
+                  <p style={{ margin: 0, fontSize: '13px' }}>There are currently no student registrations for this event.</p>
+                </div>
+              )}
             </div>
-            <div className="table-responsive" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>ID</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Date</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Event</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Student Name</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Email</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Phone</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Roll No</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Branch</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Year</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Custom Answers</th>
-                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {registrations.length > 0 ? (
-                    registrations.map(r => (
-                      <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '14px 16px', color: '#94a3b8' }}>#{r.id}</td>
-                        <td style={{ padding: '14px 16px', color: '#64748b' }}>{new Date(r.created_at).toLocaleDateString()}</td>
-                        <td style={{ padding: '14px 16px' }}><strong style={{ color: 'var(--navy)' }}>{r.event_title}</strong></td>
-                        <td style={{ padding: '14px 16px' }}><strong>{r.student_name}</strong></td>
-                        <td style={{ padding: '14px 16px', color: '#475569' }}>{r.student_email}</td>
-                        <td style={{ padding: '14px 16px', color: '#475569' }}>{r.phone}</td>
-                        <td style={{ padding: '14px 16px' }}><code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{r.roll_number}</code></td>
-                        <td style={{ padding: '14px 16px' }}>{r.branch}</td>
-                        <td style={{ padding: '14px 16px' }}>{r.year}</td>
-                        <td style={{ padding: '14px 16px', fontSize: '12px', color: '#334155' }}>
-                          {renderCustomResponses(r.custom_responses)}
-                        </td>
-                        <td style={{ padding: '14px 16px' }}>
-                          <button onClick={() => deleteRegistration(r.id)} style={{ padding: '5px 10px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No event registrations yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* EVENTS TAB */}
         {activeTab === 'events' && (
