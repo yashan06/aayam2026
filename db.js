@@ -185,69 +185,81 @@ const initDb = async () => {
       console.log('Seeded default admin user: admin / adminpassword123');
     }
 
-    // Seed Default Events if empty
-    const existingEvents = await dbAllCore(`SELECT COUNT(*) as count FROM events`);
-    if (existingEvents[0].count === 0) {
-      const initialEvents = [
-        {
-          title: 'EQUINOX 3.0',
-          subtitle: 'Technical Symposium',
-          category: 'technical',
-          date_str: '18 March 2026',
-          location: 'KU Campus, Gandhinagar',
-          description: 'The flagship event of AAYAM UIT — a national-level technical symposium bringing together the brightest minds for competitions, talks, and innovation showcases.',
-          image: 'equinox_event.png',
-          status: 'featured'
-        },
-        {
-          title: 'INFERNO 3.0',
-          subtitle: 'The Battle of Brains',
-          category: 'technical',
-          date_str: '19 March 2026',
-          location: 'KU Main Auditorium',
-          description: 'Intense coding competitions, robotics challenges, and problem solving hackathons.',
-          image: 'inferno_event.png',
-          status: 'upcoming'
-        },
-        {
-          title: 'ARIARO 4.0',
-          subtitle: 'National Level Technical Symposium',
-          category: 'technical',
-          date_str: '20 March 2026',
-          location: 'KU Engineering Block',
-          description: 'National symposium showcasing groundbreaking student tech projects, paper presentations, and guest keynotes.',
-          image: 'ariaro_event.png',
-          status: 'upcoming'
-        },
-        {
-          title: 'DATA SCIENCE WORKSHOP',
-          subtitle: 'Hands-on Machine Learning',
-          category: 'technical',
-          date_str: '28 Jan 2026',
-          location: 'CS Lab, KU',
-          description: 'An interactive workshop covering practical Python ML algorithms, data visualisations, and predictive analytics.',
-          image: '',
-          status: 'past'
-        },
-        {
-          title: 'RANG 2.0',
-          subtitle: 'Annual Cultural Festival',
-          category: 'non-technical',
-          date_str: '15 Feb 2026',
-          location: 'KU Open Air Theater',
-          description: 'A vibrant celebration of music, dance, fashion, and artistic expressions by students.',
-          image: '',
-          status: 'past'
-        }
-      ];
+    // 6. System Settings Table (to track initial seed status)
+    await dbRunCore(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    `);
 
-      for (const event of initialEvents) {
-        await dbRunCore(
-          `INSERT INTO events (title, subtitle, category, date_str, location, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [event.title, event.subtitle, event.category, event.date_str, event.location, event.description, event.image, event.status]
-        );
+    // Seed Default Events ONLY ONCE on fresh DB creation (never re-seed if admin deleted events)
+    const seededSetting = await dbGetCore(`SELECT value FROM system_settings WHERE key = 'events_seeded'`);
+    if (!seededSetting) {
+      const existingEvents = await dbAllCore(`SELECT COUNT(*) as count FROM events`);
+      if (existingEvents[0].count === 0) {
+        const initialEvents = [
+          {
+            title: 'EQUINOX 3.0',
+            subtitle: 'Technical Symposium',
+            category: 'technical',
+            date_str: '18 March 2026',
+            location: 'KU Campus, Gandhinagar',
+            description: 'The flagship event of AAYAM UIT — a national-level technical symposium bringing together the brightest minds for competitions, talks, and innovation showcases.',
+            image: 'equinox_event.png',
+            status: 'featured'
+          },
+          {
+            title: 'INFERNO 3.0',
+            subtitle: 'The Battle of Brains',
+            category: 'technical',
+            date_str: '19 March 2026',
+            location: 'KU Main Auditorium',
+            description: 'Intense coding competitions, robotics challenges, and problem solving hackathons.',
+            image: 'inferno_event.png',
+            status: 'upcoming'
+          },
+          {
+            title: 'ARIARO 4.0',
+            subtitle: 'National Level Technical Symposium',
+            category: 'technical',
+            date_str: '20 March 2026',
+            location: 'KU Engineering Block',
+            description: 'National symposium showcasing groundbreaking student tech projects, paper presentations, and guest keynotes.',
+            image: 'ariaro_event.png',
+            status: 'upcoming'
+          },
+          {
+            title: 'DATA SCIENCE WORKSHOP',
+            subtitle: 'Hands-on Machine Learning',
+            category: 'technical',
+            date_str: '28 Jan 2026',
+            location: 'CS Lab, KU',
+            description: 'An interactive workshop covering practical Python ML algorithms, data visualisations, and predictive analytics.',
+            image: '',
+            status: 'past'
+          },
+          {
+            title: 'RANG 2.0',
+            subtitle: 'Annual Cultural Festival',
+            category: 'non-technical',
+            date_str: '15 Feb 2026',
+            location: 'KU Open Air Theater',
+            description: 'A vibrant celebration of music, dance, fashion, and artistic expressions by students.',
+            image: '',
+            status: 'past'
+          }
+        ];
+
+        for (const event of initialEvents) {
+          await dbRunCore(
+            `INSERT INTO events (title, subtitle, category, date_str, location, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [event.title, event.subtitle, event.category, event.date_str, event.location, event.description, event.image, event.status]
+          );
+        }
+        console.log('Seeded initial events into database.');
       }
-      console.log('Seeded initial events into database.');
+      await dbRunCore(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('events_seeded', '1')`);
     }
 
     // 6. Team Members Table

@@ -153,16 +153,14 @@ export default function Events() {
     }
   };
 
-  const activeEvents = eventsList.length > 0 ? eventsList : DEFAULT_EVENTS;
-
-  const visibleEvents = activeEvents.filter(ev => !ev.visibility || ev.visibility === 'public');
+  const visibleEvents = eventsList.filter(ev => !ev.visibility || ev.visibility === 'public');
 
   const filteredEvents = visibleEvents.filter(ev => {
     if (filter === 'all') return true;
     return (ev.category || '').toLowerCase() === filter;
   });
 
-  const featuredEvent = visibleEvents.find(ev => (ev.status || '').toLowerCase() === 'featured') || visibleEvents[0];
+  const featuredEvent = visibleEvents.find(ev => (ev.status || '').toLowerCase() === 'featured');
 
   if (selectedEvent) {
     return (

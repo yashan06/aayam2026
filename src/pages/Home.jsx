@@ -32,7 +32,7 @@ const DEFAULT_HOME_EVENTS = [
 ];
 
 export default function Home() {
-  const [homeEvents, setHomeEvents] = useState(DEFAULT_HOME_EVENTS);
+  const [homeEvents, setHomeEvents] = useState([]);
 
   useEffect(() => {
     fetchHomeEvents();
