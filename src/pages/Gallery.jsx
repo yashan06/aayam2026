@@ -13,7 +13,7 @@ export default function Gallery() {
   const fetchGallery = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/gallery');
+      const res = await fetch(`/api/gallery?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.images)) {
         setGalleryItems(data.images);

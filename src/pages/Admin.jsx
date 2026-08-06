@@ -94,7 +94,7 @@ export default function Admin() {
 
   const loadStats = async () => {
     try {
-      const res = await fetch('/api/admin/stats', { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/stats?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setStats(data.stats);
     } catch (e) { console.error(e); }
@@ -102,7 +102,7 @@ export default function Admin() {
 
   const loadMessages = async () => {
     try {
-      const res = await fetch('/api/admin/messages', { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/messages?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setMessages(data.messages);
     } catch (e) { console.error(e); }
@@ -123,7 +123,7 @@ export default function Admin() {
 
   const loadRegistrations = async () => {
     try {
-      const res = await fetch('/api/admin/registrations', { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/registrations?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setRegistrations(data.registrations);
     } catch (e) { console.error(e); }
@@ -138,7 +138,7 @@ export default function Admin() {
 
   const loadEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success) setEventsList(data.events);
     } catch (e) { console.error(e); }
@@ -153,7 +153,7 @@ export default function Admin() {
 
   const loadTeam = async () => {
     try {
-      const res = await fetch('/api/admin/team', { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/team?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setTeamList(data.team);
     } catch (e) { console.error(e); }
@@ -209,7 +209,7 @@ export default function Admin() {
 
   const loadGallery = async () => {
     try {
-      const res = await fetch('/api/admin/gallery', { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/gallery?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setGalleryList(data.images);
     } catch (e) { console.error(e); }

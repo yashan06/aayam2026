@@ -93,7 +93,7 @@ export default function Home() {
 
   const fetchHomeEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.events)) {
         setHomeEvents(data.events.slice(0, 3));

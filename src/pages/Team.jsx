@@ -23,7 +23,7 @@ export default function Team() {
   const fetchTeam = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/team');
+      const res = await fetch(`/api/team?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success) {
         setTeamList(data.team || []);

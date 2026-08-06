@@ -85,7 +85,7 @@ export default function Events() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.events)) {
         setEventsList(data.events);

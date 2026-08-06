@@ -69,21 +69,27 @@ button { cursor: pointer; font-family: inherit; }
   display: flex; align-items: center; gap: 32px;
 }
 .nav-brand {
-  display: flex; align-items: center; gap: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   flex-shrink: 0;
 }
-.nav-brand .ku-logo {
-  width: 38px; height: 38px; object-fit: contain;
+.nav-brand img {
+  display: block;
+  vertical-align: middle;
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  background: transparent;
+  margin: 0;
+  padding: 0;
 }
 .nav-divider {
-  width: 1px; height: 36px; background: #d0c8b8;
-}
-.nav-brand .uit-text {
-  font-size: 22px; font-weight: 800;
-  color: var(--navy); letter-spacing: -0.5px;
-}
-.nav-brand .aayam-badge {
-  width: 44px; height: 44px; object-fit: contain;
+  width: 1px;
+  height: 32px;
+  background: rgba(15, 27, 60, 0.25);
+  align-self: center;
 }
 .nav-links {
   display: flex; align-items: center; gap: 4px;
