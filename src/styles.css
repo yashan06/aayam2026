@@ -1340,15 +1340,17 @@ button { cursor: pointer; font-family: inherit; }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at 50% 20%, #172752 0%, #0f1b3c 60%, #080f24 100%);
+  background-image: url('/auth_bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   position: relative;
   overflow-y: auto;
 }
 .auth-bg-overlay {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(200, 146, 42, 0.12) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background: linear-gradient(135deg, rgba(15, 27, 60, 0.86) 0%, rgba(15, 27, 60, 0.70) 50%, rgba(8, 15, 36, 0.88) 100%);
   pointer-events: none;
 }
 .auth-header-nav {

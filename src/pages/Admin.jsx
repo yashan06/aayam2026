@@ -426,7 +426,7 @@ export default function Admin() {
   // IF NOT LOGGED IN AS ADMIN
   if (!isAdminLoggedIn) {
     return (
-      <div className="admin-login-wrap" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top, #1a2a55 0%, #0f1b3c 60%, #080f24 100%)', padding: '20px' }}>
+      <div className="admin-login-wrap" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: "linear-gradient(135deg, rgba(15, 27, 60, 0.88) 0%, rgba(8, 15, 36, 0.90) 100%), url('/auth_bg.jpg')", backgroundSize: 'cover', backgroundPosition: 'center center', padding: '20px' }}>
         <div className="admin-login-card" style={{ background: '#ffffff', borderRadius: '20px', padding: '48px 40px', width: '100%', maxWidth: '440px', boxShadow: '0 25px 60px rgba(0,0,0,0.5)', border: '1px solid rgba(200, 146, 42, 0.3)' }}>
           <div className="admin-login-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '42px', color: 'var(--gold)', fontWeight: 800, lineHeight: 1 }}>आयाम</div>

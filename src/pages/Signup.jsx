@@ -46,7 +46,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" style={{ backgroundImage: "url('/auth_bg.jpg')", backgroundSize: 'cover', backgroundPosition: 'center center' }}>
       <div className="auth-bg-overlay"></div>
 
       <header className="auth-header-nav">
