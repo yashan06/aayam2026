@@ -58,44 +58,38 @@ export default function Gallery() {
       <section style={{ padding: '60px 40px 80px', background: 'var(--cream-dark)', minHeight: '60vh' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           
-          {/* CATEGORY FILTER PILLS */}
-          {categories.length > 1 && (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '40px' }}>
-              {categories.map((cat, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveCategory(cat)}
-                  style={{
-                    padding: '8px 20px',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    borderRadius: '30px',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    background: activeCategory === cat ? 'var(--navy)' : 'var(--white)',
-                    color: activeCategory === cat ? 'var(--gold-pale)' : 'var(--text-mid)',
-                    boxShadow: activeCategory === cat ? '0 4px 14px rgba(15,27,60,0.2)' : 'var(--shadow-sm)'
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* CATEGORY FILTER HEADER - SHOW ALL ONLY */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '36px' }}>
+            <span style={{
+              padding: '8px 24px',
+              fontSize: '13px',
+              fontWeight: 800,
+              borderRadius: '30px',
+              background: 'var(--navy)',
+              color: 'var(--gold-pale)',
+              boxShadow: '0 4px 14px rgba(15,27,60,0.2)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              🖼️ All Gallery Moments
+            </span>
+          </div>
 
           {/* GALLERY GRID */}
           {loading ? (
             <div style={{ textAlign: 'center', padding: '60px', color: 'var(--navy)', fontWeight: 600 }}>Loading gallery...</div>
-          ) : filteredItems.length === 0 ? (
+          ) : galleryItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: '16px', color: '#64748b' }}>
               <div style={{ fontSize: '36px', marginBottom: '12px' }}>🖼️</div>
               <h3 style={{ color: 'var(--navy)', fontSize: '20px', marginBottom: '8px' }}>No Images Found</h3>
-              <p style={{ fontSize: '14px', margin: 0 }}>There are currently no gallery photos in this category.</p>
+              <p style={{ fontSize: '14px', margin: 0 }}>There are currently no gallery photos published.</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '28px' }}>
-              {filteredItems.map((item) => (
+              {galleryItems.map((item) => (
                 <div
                   key={item.id}
                   className="g-item hover-card"
@@ -108,10 +102,11 @@ export default function Gallery() {
                       alt={item.title}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                     />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(15,27,60,0.75) 100%)', opacity: 0, transition: 'opacity 0.3s ease' }} className="img-overlay" />
                   </div>
-                  <div style={{ padding: '20px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--gold)', letterSpacing: '1px', textTransform: 'uppercase' }}>{item.category || 'General'}</div>
-                    <h4 style={{ fontFamily: "'Playfair Display',serif", fontSize: '18px', fontWeight: 700, color: 'var(--navy)', marginTop: '4px' }}>{item.title}</h4>
+                  <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>{item.title}</h3>
+                    <span style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 600 }}>Zoom ↗</span>
                   </div>
                 </div>
               ))}
