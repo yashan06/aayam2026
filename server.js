@@ -659,15 +659,15 @@ app.get('/api/admin/team', authAdmin, async (req, res) => {
 // Admin: Create Team Member
 app.post('/api/admin/team', authAdmin, async (req, res) => {
   try {
-    const { name, role, category, branch_title, description, image, icon, linkedin_url, email, display_order } = req.body;
+    const { name, role, category, branch_title, description, image, icon, linkedin_url, email, instagram_url, display_order } = req.body;
     if (!name || !role) {
       return res.status(400).json({ success: false, error: 'Name and role are required.' });
     }
 
     const result = await dbRun(
-      `INSERT INTO team_members (name, role, category, branch_title, description, image, icon, linkedin_url, email, display_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', display_order || 0]
+      `INSERT INTO team_members (name, role, category, branch_title, description, image, icon, linkedin_url, email, instagram_url, display_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0]
     );
 
     res.status(201).json({ success: true, message: 'Team member created.', id: result.lastID });
@@ -680,15 +680,15 @@ app.post('/api/admin/team', authAdmin, async (req, res) => {
 // Admin: Update Team Member
 app.put('/api/admin/team/:id', authAdmin, async (req, res) => {
   try {
-    const { name, role, category, branch_title, description, image, icon, linkedin_url, email, display_order } = req.body;
+    const { name, role, category, branch_title, description, image, icon, linkedin_url, email, instagram_url, display_order } = req.body;
     if (!name || !role) {
       return res.status(400).json({ success: false, error: 'Name and role are required.' });
     }
 
     await dbRun(
-      `UPDATE team_members SET name = ?, role = ?, category = ?, branch_title = ?, description = ?, image = ?, icon = ?, linkedin_url = ?, email = ?, display_order = ?
+      `UPDATE team_members SET name = ?, role = ?, category = ?, branch_title = ?, description = ?, image = ?, icon = ?, linkedin_url = ?, email = ?, instagram_url = ?, display_order = ?
        WHERE id = ?`,
-      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', display_order || 0, req.params.id]
+      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0, req.params.id]
     );
 
     res.json({ success: true, message: 'Team member updated.' });

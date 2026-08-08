@@ -319,10 +319,9 @@ export default function Team() {
                             {item.description}
                           </p>
                         )}
-
-                        {/* LINKEDIN & EMAIL SOCIAL LINKS */}
+                        {/* LINKEDIN, INSTAGRAM & EMAIL SOCIAL LINKS */}
                         <div
-                          style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 'auto' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 'auto' }}
                           onClick={(e) => e.stopPropagation()} // Prevent card popup if clicking links directly
                         >
                           {/* LinkedIn Link */}
@@ -347,6 +346,33 @@ export default function Team() {
                           >
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
                               <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                            </svg>
+                          </a>
+
+                          {/* Instagram Link */}
+                          <a
+                            href={item.instagram_url || 'https://www.instagram.com/uit_students_committee'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Instagram Profile of ${item.name}`}
+                            className="social-link-btn"
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: '#f4ede2',
+                              color: '#d62976',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justify: 'center',
+                              textDecoration: 'none',
+                              border: '1px solid #e2d7c5'
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
                             </svg>
                           </a>
 
@@ -548,7 +574,7 @@ export default function Team() {
                   textDecoration: 'none',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   boxShadow: '0 4px 14px rgba(10, 102, 194, 0.3)',
                   transition: 'all 0.2s ease'
@@ -558,6 +584,35 @@ export default function Team() {
                   <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
                 </svg>
                 View LinkedIn Profile ↗
+              </a>
+
+              {/* Instagram Button */}
+              <a
+                href={selectedMember.instagram_url || 'https://www.instagram.com/uit_students_committee'}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '13px 20px',
+                  borderRadius: '30px',
+                  background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(220, 39, 67, 0.35)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                View Instagram Profile ↗
               </a>
 
               {/* Email Button */}

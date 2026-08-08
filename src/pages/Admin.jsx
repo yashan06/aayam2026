@@ -36,7 +36,7 @@ export default function Admin() {
   const [showAddTeamMember, setShowAddTeamMember] = useState(false);
   const [editingTeamMember, setEditingTeamMember] = useState(null);
   const [newTeamMember, setNewTeamMember] = useState({
-    name: '', role: '', category: 'leadership', branch_title: '', description: '', image: '', icon: '⭐', display_order: 0
+    name: '', role: '', category: 'leadership', branch_title: '', description: '', image: '', icon: '⭐', linkedin_url: '', email: '', instagram_url: '', display_order: 0
   });
 
   // Add / Edit gallery modal
@@ -176,7 +176,7 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowAddTeamMember(false);
-        setNewTeamMember({ name: '', role: '', category: 'leadership', branch_title: '', description: '', image: '', icon: '⭐', display_order: 0 });
+        setNewTeamMember({ name: '', role: '', category: 'leadership', branch_title: '', description: '', image: '', icon: '⭐', linkedin_url: '', email: '', instagram_url: '', display_order: 0 });
         loadTeam();
       } else {
         window.alert(data.error || 'Failed to add team member.');
@@ -1347,6 +1347,27 @@ export default function Admin() {
                   />
                 </div>
 
+                {/* 6b. Instagram Profile URL */}
+                <div>
+                  <input
+                    type="url"
+                    value={newTeamMember.instagram_url || ''}
+                    onChange={(e) => setNewTeamMember({ ...newTeamMember, instagram_url: e.target.value })}
+                    placeholder="Instagram Profile URL (e.g. https://instagram.com/username)"
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      border: '1.5px solid #e8dfd1',
+                      borderRadius: '16px',
+                      background: '#fffefb',
+                      fontSize: '14px',
+                      color: 'var(--navy)',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
                 {/* 7. Short Bio / Description */}
                 <div>
                   <input
@@ -1513,6 +1534,27 @@ export default function Admin() {
                     value={editingTeamMember.email || ''}
                     onChange={(e) => setEditingTeamMember({ ...editingTeamMember, email: e.target.value })}
                     placeholder="Email Address (e.g. member@ku.edu.in)"
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      border: '1.5px solid #e8dfd1',
+                      borderRadius: '16px',
+                      background: '#fffefb',
+                      fontSize: '14px',
+                      color: 'var(--navy)',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Instagram Profile URL */}
+                <div>
+                  <input
+                    type="url"
+                    value={editingTeamMember.instagram_url || ''}
+                    onChange={(e) => setEditingTeamMember({ ...editingTeamMember, instagram_url: e.target.value })}
+                    placeholder="Instagram Profile URL (e.g. https://instagram.com/username)"
                     style={{
                       width: '100%',
                       padding: '14px 18px',

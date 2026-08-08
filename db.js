@@ -207,13 +207,14 @@ const initDb = async () => {
         icon TEXT,
         linkedin_url TEXT,
         email TEXT,
+        instagram_url TEXT,
         display_order INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Migration: Add new columns if table was created previously without them
-    const newTeamCols = ['linkedin_url', 'email'];
+    const newTeamCols = ['linkedin_url', 'email', 'instagram_url'];
     for (const col of newTeamCols) {
       try {
         await dbRunCore(`ALTER TABLE team_members ADD COLUMN ${col} TEXT`);
