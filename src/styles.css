@@ -56,12 +56,12 @@ button { cursor: pointer; font-family: inherit; }
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1.5px solid var(--border);
   padding: 0 28px;
-  height: 108px;
+  height: 110px;
   display: flex; align-items: center;
   transition: var(--transition);
 }
 .navbar.scrolled {
-  height: 94px;
+  height: 92px;
   box-shadow: var(--shadow-md);
 }
 .nav-inner {
@@ -72,22 +72,25 @@ button { cursor: pointer; font-family: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 18px;
   flex-shrink: 0;
 }
 .nav-brand img {
   display: block;
   vertical-align: middle;
-  height: 52px;
+  height: 70px;
   width: auto;
   object-fit: contain;
   background: transparent;
   margin: 0;
   padding: 0;
 }
+.navbar.scrolled .nav-brand img {
+  height: 58px;
+}
 .nav-divider {
   width: 1px;
-  height: 32px;
+  height: 42px;
   background: rgba(15, 27, 60, 0.25);
   align-self: center;
 }
@@ -914,6 +917,7 @@ button { cursor: pointer; font-family: inherit; }
   text-transform: uppercase;
   margin-bottom: 24px;
   box-shadow: 0 4px 16px rgba(14, 27, 56, 0.06);
+  margin-left: -20px;
 }
 .pill-dot {
   width: 7px;

@@ -33,39 +33,39 @@ export default function Navbar() {
     <>
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} id="mainNav">
         <div className="nav-inner">
-          <Link to="/" className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '16px', textDecoration: 'none' }}>
+          <Link to="/" className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '18px', textDecoration: 'none' }}>
             {/* Karnavati University NAAC A+ Logo */}
             <img
               src="/karnavati_logo.png"
               alt="Karnavati University"
               style={{
-                height: '54px',
+                height: '70px',
                 objectFit: 'contain',
                 background: 'transparent'
               }}
             />
 
-            <div className="nav-divider" style={{ opacity: 0.4, height: '32px' }}></div>
+            <div className="nav-divider" style={{ opacity: 0.4, height: '42px' }}></div>
 
             {/* UIT Logo */}
             <img
               src="/uit_logo.png"
               alt="UIT"
               style={{
-                height: '54px',
+                height: '70px',
                 objectFit: 'contain',
                 background: 'transparent'
               }}
             />
 
-            <div className="nav-divider" style={{ opacity: 0.4, height: '32px' }}></div>
+            <div className="nav-divider" style={{ opacity: 0.4, height: '42px' }}></div>
 
             {/* AAYAM Logo */}
             <img
               src="/aayam_logo.png"
               alt="AAYAM"
               style={{
-                height: '54px',
+                height: '70px',
                 objectFit: 'contain',
                 background: 'transparent'
               }}
