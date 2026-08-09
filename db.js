@@ -285,6 +285,36 @@ const initDb = async () => {
       console.log('Seeded initial gallery images into database.');
     }
 
+    // 8. Moments That Matter Table
+    await dbRunCore(`
+      CREATE TABLE IF NOT EXISTS moments_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        image TEXT NOT NULL,
+        display_order INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed Initial Moments Images if empty
+    const existingMoments = await dbAllCore(`SELECT COUNT(*) as count FROM moments_images`);
+    if (existingMoments[0].count === 0) {
+      const initialMoments = [
+        { title: 'Unitedworld Fest Celebration', image: '/equinox_event.png', display_order: 1 },
+        { title: 'AAYAM Student Team Gathering', image: '/inferno_event.png', display_order: 2 },
+        { title: 'Keynote Tech Address', image: '/ariaro_event.png', display_order: 3 },
+        { title: 'Cultural Stage Performance', image: '/university_sketch.png', display_order: 4 }
+      ];
+
+      for (const item of initialMoments) {
+        await dbRunCore(
+          `INSERT INTO moments_images (title, image, display_order) VALUES (?, ?, ?)`,
+          [item.title, item.image, item.display_order]
+        );
+      }
+      console.log('Seeded initial moments images into database.');
+    }
+
     console.log('Database initialization complete with students and admins tables.');
   } catch (error) {
     console.error('Error initializing database tables:', error);

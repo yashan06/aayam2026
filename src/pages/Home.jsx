@@ -91,6 +91,13 @@ export default function Home() {
     };
   }, []);
 
+  const [momentsList, setMomentsList] = useState([]);
+
+  useEffect(() => {
+    fetchHomeEvents();
+    fetchMoments();
+  }, []);
+
   const fetchHomeEvents = async () => {
     try {
       const res = await fetch(`/api/events?_t=${Date.now()}`);
@@ -100,6 +107,18 @@ export default function Home() {
       }
     } catch (err) {
       console.error('Error fetching home events:', err);
+    }
+  };
+
+  const fetchMoments = async () => {
+    try {
+      const res = await fetch(`/api/moments?_t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.images)) {
+        setMomentsList(data.images);
+      }
+    } catch (err) {
+      console.error('Error fetching moments:', err);
     }
   };
 
@@ -236,55 +255,133 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CORE BRANCHES */}
-      <section class="branches-section" style={{ background: 'var(--cream)', padding: '80px 40px' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div class="section-tag center">OUR ARCHITECTURE</div>
-          <h2 class="section-title center">8 Core Pillars of <span class="gold">AAYAM.</span></h2>
-          <p class="section-subtitle center">Our committee is divided into 8 specialized branches, each driving a distinct aspect of student life.</p>
-
-          <div class="branches-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginTop: '48px' }}>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">⚙️</div>
-              <h3>Management</h3>
-              <p>Planning, coordinating, and executing large-scale campus events and initiatives seamlessly.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">📸</div>
-              <h3>Media & Content</h3>
-              <p>Capturing memories, creating engaging visual content, graphics, and social media campaigns.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">💻</div>
-              <h3>Technical</h3>
-              <p>Driving tech workshops, hackathons, web development, and technical symposiums.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">🏆</div>
-              <h3>Sports</h3>
-              <p>Organizing inter-departmental tournaments, athletic leagues, and promoting fitness.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">🎭</div>
-              <h3>Cultural</h3>
-              <p>Bringing music, dance, drama, and artistic festivals to life with enthusiasm.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">📢</div>
-              <h3>Communication</h3>
-              <p>Public relations, outreach, sponsor negotiations, and inter-university liaison.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">🤝</div>
-              <h3>Hospitality</h3>
-              <p>Welcoming dignitaries, managing guest accommodations, and stage protocols.</p>
-            </div>
-            <div class="branch-card hover-card">
-              <div class="branch-icon">🛡️</div>
-              <h3>Discipline</h3>
-              <p>Ensuring decorum, crowd management, and safety during major university events.</p>
-            </div>
+      {/* EVENTS & COLLABORATIONS — MOMENTS THAT MATTER */}
+      <section style={{ background: '#FAF6F0', padding: '90px 40px 100px', borderTop: '1px solid #E8DFD1' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
+          
+          {/* Tagline */}
+          <div style={{
+            fontSize: '11px',
+            fontWeight: 800,
+            letterSpacing: '3px',
+            color: '#B88A38',
+            textTransform: 'uppercase',
+            marginBottom: '10px'
+          }}>
+            EVENTS & COLLABORATIONS
           </div>
+
+          {/* Title */}
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 'clamp(36px, 4.5vw, 54px)',
+            fontWeight: 800,
+            color: '#1C1815',
+            margin: '0 0 16px 0',
+            lineHeight: 1.15
+          }}>
+            Moments That Matter
+          </h2>
+
+          {/* Subtitle */}
+          <p style={{
+            fontSize: '15px',
+            color: '#665C50',
+            maxWidth: '680px',
+            margin: '0 auto 24px',
+            lineHeight: 1.6,
+            fontWeight: 500
+          }}>
+            From grand cultural fests to intimate technical workshops — AAYAM is the backbone behind every event that writes the story of UIT.
+          </p>
+
+          {/* Pill Badge */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '50px' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 24px',
+              borderRadius: '30px',
+              border: '1.5px solid #DCD1C2',
+              background: '#ECE4D8',
+              color: '#7A684B',
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase'
+            }}>
+              ★ POWERED BY AAYAM EXCELLENCE ★
+            </span>
+          </div>
+
+          {/* 4-Card Image Showcase Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '24px'
+          }}>
+            {momentsList.length > 0 ? (
+              momentsList.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    height: '270px',
+                    boxShadow: '0 10px 30px rgba(28, 24, 21, 0.08)',
+                    background: '#1c1815',
+                    position: 'relative',
+                    transition: 'transform 0.4s ease, box-shadow 0.4s ease'
+                  }}
+                  className="hover-card"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title || 'Moments That Matter'}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                </div>
+              ))
+            ) : (
+              /* Fallback cards if database is being populated */
+              [
+                { id: 1, img: '/equinox_event.png' },
+                { id: 2, img: '/inferno_event.png' },
+                { id: 3, img: '/ariaro_event.png' },
+                { id: 4, img: '/university_sketch.png' }
+              ].map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    height: '270px',
+                    boxShadow: '0 10px 30px rgba(28, 24, 21, 0.08)',
+                    background: '#1c1815'
+                  }}
+                  className="hover-card"
+                >
+                  <img
+                    src={item.img}
+                    alt="Moments That Matter"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                </div>
+              ))
+            )}
+          </div>
+
         </div>
       </section>
     </>

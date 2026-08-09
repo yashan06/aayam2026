@@ -46,6 +46,14 @@ export default function Admin() {
     title: '', category: 'Technical', image: '', display_order: 0
   });
 
+  // Add / Edit moments modal
+  const [momentsList, setMomentsList] = useState([]);
+  const [showAddMomentModal, setShowAddMomentModal] = useState(false);
+  const [editingMomentItem, setEditingMomentItem] = useState(null);
+  const [newMomentItem, setNewMomentItem] = useState({
+    title: '', image: '', display_order: 0
+  });
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem('aayam_token') || localStorage.getItem('aayam_admin_token');
     return {
@@ -64,6 +72,7 @@ export default function Admin() {
       loadEvents();
       loadTeam();
       loadGallery();
+      loadMoments();
     }
   }, [isAdminLoggedIn]);
 
@@ -215,10 +224,66 @@ export default function Admin() {
     } catch (e) { console.error(e); }
   };
 
+  const loadMoments = async () => {
+    try {
+      const res = await fetch(`/api/admin/moments?_t=${Date.now()}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (data.success) setMomentsList(data.images);
+    } catch (e) { console.error(e); }
+  };
+
   const deleteGalleryItem = async (id) => {
     if (!window.confirm('Delete this gallery photo?')) return;
     await fetch(`/api/admin/gallery/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     loadGallery();
+  };
+
+  const deleteMomentItem = async (id) => {
+    if (!window.confirm('Delete this moment photo?')) return;
+    await fetch(`/api/admin/moments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    loadMoments();
+  };
+
+  const handleCreateMomentItem = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/moments', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(newMomentItem)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowAddMomentModal(false);
+        setNewMomentItem({ title: '', image: '', display_order: 0 });
+        loadMoments();
+      } else {
+        window.alert(data.error || 'Failed to add moment photo.');
+      }
+    } catch (err) {
+      window.alert('Network error.');
+    }
+  };
+
+  const handleUpdateMomentItem = async (e) => {
+    e.preventDefault();
+    if (!editingMomentItem) return;
+    try {
+      const res = await fetch(`/api/admin/moments/${editingMomentItem.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(editingMomentItem)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingMomentItem(null);
+        loadMoments();
+      } else {
+        window.alert(data.error || 'Failed to update moment photo.');
+      }
+    } catch (err) {
+      window.alert('Network error.');
+    }
   };
 
   const handleCreateGalleryItem = async (e) => {
@@ -1124,6 +1189,54 @@ export default function Admin() {
             </div>
           </div>
         )}
+
+        {/* MOMENTS THAT MATTER TAB PANEL */}
+        {activeTab === 'moments' && (
+          <div style={{ background: '#ffffff', borderRadius: '20px', padding: '28px', boxShadow: '0 4px 20px rgba(15,27,60,0.06)', border: '1px solid #e8e0d0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '20px', fontFamily: "'Playfair Display',serif", fontWeight: 800 }}>✨ Events & Collaborations — Moments That Matter</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>Upload and manage moment photos displayed in the "Moments That Matter" section on the Home page.</p>
+              </div>
+              <button onClick={() => setShowAddMomentModal(true)} className="btn-primary" style={{ padding: '10px 20px', fontSize: '13px', cursor: 'pointer', borderRadius: '8px', fontWeight: 700, boxShadow: '0 4px 14px rgba(200,146,42,0.3)' }}>
+                + Add Moment Photo
+              </button>
+            </div>
+            <div className="table-responsive" style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Photo</th>
+                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Title / Caption</th>
+                    <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 700 }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {momentsList.length > 0 ? (
+                    momentsList.map(m => (
+                      <tr key={m.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '12px 16px' }}>
+                          <img src={m.image} alt={m.title} style={{ width: '64px', height: '48px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <strong style={{ color: 'var(--navy)', fontSize: '14px' }}>{m.title || 'Moment Image'}</strong>
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => setEditingMomentItem(m)} style={{ padding: '5px 12px', background: '#dbeafe', color: '#1d4ed8', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                            <button onClick={() => deleteMomentItem(m.id)} style={{ padding: '5px 12px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No moment photos added yet. Click <strong>+ Add Moment Photo</strong> to upload one.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ADD EVENT MODAL */}
@@ -1803,6 +1916,120 @@ export default function Admin() {
 
               <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
                 <button type="button" onClick={() => setEditingGalleryItem(null)} style={{ padding: '9px 18px', border: '1px solid #cbd5e1', background: '#fff', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ padding: '9px 20px', cursor: 'pointer', fontSize: '13px' }}>Update Photo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD MOMENT IMAGE MODAL */}
+      {showAddMomentModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,60,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '540px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '20px', fontFamily: "'Playfair Display',serif" }}>✨ Add Moment Photo</h3>
+              <button onClick={() => setShowAddMomentModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+
+            <form onSubmit={handleCreateMomentItem}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy)', display: 'block', marginBottom: '4px' }}>Moment Title / Caption *</label>
+                  <input type="text" value={newMomentItem.title} onChange={(e) => setNewMomentItem({ ...newMomentItem, title: e.target.value })} required placeholder="e.g. Cultural Fest Celebration" style={{ width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px' }} />
+                </div>
+
+                {/* Photo Upload */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy)', display: 'block', marginBottom: '4px' }}>Image File / Photo *</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px dashed #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
+                      📁 Choose File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setNewMomentItem({ ...newMomentItem, image: reader.result });
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>or URL:</span>
+                    <input type="text" value={newMomentItem.image} onChange={(e) => setNewMomentItem({ ...newMomentItem, image: e.target.value })} placeholder="https://..." style={{ flex: 1, padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px' }} />
+                  </div>
+                  {newMomentItem.image && (
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={newMomentItem.image} alt="Preview" style={{ width: '80px', height: '54px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                      <button type="button" onClick={() => setNewMomentItem({ ...newMomentItem, image: '' })} style={{ padding: '3px 8px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Remove Image</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                <button type="button" onClick={() => setShowAddMomentModal(false)} style={{ padding: '9px 18px', border: '1px solid #cbd5e1', background: '#fff', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ padding: '9px 20px', cursor: 'pointer', fontSize: '13px' }}>Upload Moment Photo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MOMENT IMAGE MODAL */}
+      {editingMomentItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,60,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '540px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '20px', fontFamily: "'Playfair Display',serif" }}>✏️ Edit Moment Photo #{editingMomentItem.id}</h3>
+              <button onClick={() => setEditingMomentItem(null)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+
+            <form onSubmit={handleUpdateMomentItem}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy)', display: 'block', marginBottom: '4px' }}>Moment Title / Caption *</label>
+                  <input type="text" value={editingMomentItem.title || ''} onChange={(e) => setEditingMomentItem({ ...editingMomentItem, title: e.target.value })} required style={{ width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px' }} />
+                </div>
+
+                {/* Photo Upload */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy)', display: 'block', marginBottom: '4px' }}>Image File / Photo *</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px dashed #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
+                      📁 Choose File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setEditingMomentItem({ ...editingMomentItem, image: reader.result });
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>or URL:</span>
+                    <input type="text" value={editingMomentItem.image || ''} onChange={(e) => setEditingMomentItem({ ...editingMomentItem, image: e.target.value })} placeholder="https://..." style={{ flex: 1, padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px' }} />
+                  </div>
+                  {editingMomentItem.image && (
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={editingMomentItem.image} alt="Preview" style={{ width: '80px', height: '54px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                      <button type="button" onClick={() => setEditingMomentItem({ ...editingMomentItem, image: '' })} style={{ padding: '3px 8px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Remove Image</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                <button type="button" onClick={() => setEditingMomentItem(null)} style={{ padding: '9px 18px', border: '1px solid #cbd5e1', background: '#fff', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>Cancel</button>
                 <button type="submit" className="btn-primary" style={{ padding: '9px 20px', cursor: 'pointer', fontSize: '13px' }}>Update Photo</button>
               </div>
             </form>
