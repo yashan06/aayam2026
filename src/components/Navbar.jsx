@@ -82,8 +82,13 @@ export default function Navbar() {
             <div className="nav-auth-wrap" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '12px' }}>
               {!user ? (
                 <>
-                  <Link to="/login" className="nav-login-link" style={{ color: 'var(--navy)', fontWeight: 600, fontSize: '13px', textDecoration: 'none', padding: '6px 12px' }}>Log In</Link>
-                  <Link to="/signup" className="btn-primary" style={{ padding: '8px 16px', fontSize: '12px', borderRadius: '20px', textDecoration: 'none' }}>Sign Up</Link>
+                  <Link to="/login" className="nav-login-link">Log In</Link>
+                  <Link to="/signup" className="nav-signup-btn">
+                    <span>Sign Up</span>
+                    <svg className="nav-signup-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </Link>
                 </>
               ) : user.role === 'admin' ? (
                 <>
@@ -123,8 +128,13 @@ export default function Navbar() {
         <div class="mobile-auth-section" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {!user ? (
             <>
-              <Link to="/login" style={{ textAlign: 'center', padding: '10px', border: '1px solid var(--navy)', borderRadius: '8px', color: 'var(--navy)', fontWeight: 600, textDecoration: 'none' }}>Log In</Link>
-              <Link to="/signup" class="btn-primary" style={{ textAlign: 'center', padding: '10px', justifyContent: 'center', textDecoration: 'none' }}>Sign Up</Link>
+              <Link to="/login" style={{ textAlign: 'center', padding: '11px', border: '1.5px solid var(--navy)', borderRadius: '30px', color: 'var(--navy)', fontWeight: 600, textDecoration: 'none' }}>Log In</Link>
+              <Link to="/signup" className="nav-signup-btn" style={{ textAlign: 'center', padding: '11px', justifyContent: 'center', textDecoration: 'none', width: '100%' }}>
+                <span>Sign Up</span>
+                <svg className="nav-signup-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
             </>
           ) : user.role === 'admin' ? (
             <>

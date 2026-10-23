@@ -134,6 +134,126 @@ button { cursor: pointer; font-family: inherit; }
 }
 .nav-cta svg { width: 16px; height: 16px; }
 
+/* ---- NAV AUTH BUTTONS (SIGN UP & LOGIN) ---- */
+.nav-auth-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 12px;
+}
+
+.nav-login-link {
+  color: var(--navy) !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  padding: 8px 14px !important;
+  border-radius: 20px !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-login-link:hover {
+  color: var(--gold) !important;
+  background: rgba(200, 146, 42, 0.08) !important;
+}
+.nav-login-link.active::after {
+  display: none !important;
+}
+
+/* Luxury Animated Sign Up Button */
+.nav-signup-btn {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 18px !important;
+  background: linear-gradient(135deg, #0f1b3c 0%, #182854 100%) !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(200, 146, 42, 0.5) !important;
+  border-radius: 30px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px;
+  text-decoration: none !important;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(15, 27, 60, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Glowing sheen animation sweeping across button */
+.nav-signup-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: navBtnSheen 4.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Hover: elevated midnight navy with subtle gold ambient glow */
+.nav-signup-btn:hover {
+  background: linear-gradient(135deg, #172752 0%, #223872 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(200, 146, 42, 0.95) !important;
+  box-shadow: 0 8px 24px rgba(15, 27, 60, 0.28), 0 0 16px rgba(200, 146, 42, 0.35) !important;
+  transform: translateY(-2px);
+}
+
+/* Interactive arrow transition */
+.nav-signup-arrow {
+  color: var(--gold-pale);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.nav-signup-btn:hover .nav-signup-arrow {
+  transform: translateX(3px);
+  color: #ffffff;
+}
+
+/* Tactile Click / Active state: smooth responsive press, prevents turning gold */
+.nav-signup-btn:active,
+.nav-signup-btn:focus-visible {
+  background: #0f1b3c !important;
+  color: #ffffff !important;
+  border-color: var(--gold) !important;
+  transform: translateY(0px) scale(0.97) !important;
+  box-shadow: 0 2px 8px rgba(15, 27, 60, 0.25) !important;
+}
+
+/* Suppress nav-links underline & text color shift when on /signup */
+.nav-signup-btn.active::after {
+  display: none !important;
+}
+.nav-signup-btn.active {
+  color: #ffffff !important;
+  border-color: var(--gold) !important;
+}
+
+@keyframes navBtnSheen {
+  0%, 65% {
+    left: -120%;
+  }
+  85%, 100% {
+    left: 200%;
+  }
+}
+
 /* Mobile Menu */
 .hamburger {
   display: none;
