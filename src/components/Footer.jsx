@@ -7,8 +7,19 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <div className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', marginBottom: '16px', background: 'transparent' }}>
-            {/* Karnavati University Logo */}
-            <img src="/karnavati_logo.png" alt="Karnavati University" style={{ height: '42px', objectFit: 'contain', background: 'transparent' }} />
+            {/* Karnavati University Logo with white background badge for visibility */}
+            <img
+              src="/karnavati_logo.png"
+              alt="Karnavati University"
+              style={{
+                height: '42px',
+                objectFit: 'contain',
+                background: '#ffffff',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              }}
+            />
 
             <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.25)' }}></div>
 
@@ -55,7 +66,6 @@ export default function Footer() {
             <li><Link to="/team">Our Team</Link></li>
             <li><Link to="/gallery">Gallery</Link></li>
             <li><Link to="/contact">Contact Us</Link></li>
-            <li><Link to="/admin" style={{ color: 'var(--gold-pale, #f59e0b)' }}>Admin Portal</Link></li>
           </ul>
         </div>
 
@@ -69,7 +79,6 @@ export default function Footer() {
             <li><a href="#">Cultural</a></li>
             <li><a href="#">Communication</a></li>
             <li><a href="#">Hospitality</a></li>
-            <li><a href="#">Discipline</a></li>
           </ul>
         </div>
 
