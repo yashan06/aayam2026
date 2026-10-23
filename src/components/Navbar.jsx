@@ -82,7 +82,12 @@ export default function Navbar() {
             <div className="nav-auth-wrap" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: '12px' }}>
               {!user ? (
                 <>
-                  <Link to="/login" className="nav-login-link">Log In</Link>
+                  <Link to="/login" className="nav-login-btn">
+                    <span>Log In</span>
+                    <svg className="nav-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                    </svg>
+                  </Link>
                   <Link to="/signup" className="nav-signup-btn">
                     <span>Sign Up</span>
                     <svg className="nav-signup-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
@@ -128,7 +133,12 @@ export default function Navbar() {
         <div class="mobile-auth-section" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {!user ? (
             <>
-              <Link to="/login" style={{ textAlign: 'center', padding: '11px', border: '1.5px solid var(--navy)', borderRadius: '30px', color: 'var(--navy)', fontWeight: 600, textDecoration: 'none' }}>Log In</Link>
+              <Link to="/login" className="nav-login-btn" style={{ textAlign: 'center', padding: '11px', justifyContent: 'center', textDecoration: 'none', width: '100%' }}>
+                <span>Log In</span>
+                <svg className="nav-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                </svg>
+              </Link>
               <Link to="/signup" className="nav-signup-btn" style={{ textAlign: 'center', padding: '11px', justifyContent: 'center', textDecoration: 'none', width: '100%' }}>
                 <span>Sign Up</span>
                 <svg className="nav-signup-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">

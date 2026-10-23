@@ -142,28 +142,10 @@ button { cursor: pointer; font-family: inherit; }
   margin-left: 12px;
 }
 
-.nav-login-link {
-  color: var(--navy) !important;
-  font-weight: 600 !important;
-  font-size: 13.5px !important;
-  padding: 8px 14px !important;
-  border-radius: 20px !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  text-decoration: none !important;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-}
-.nav-login-link:hover {
-  color: var(--gold) !important;
-  background: rgba(200, 146, 42, 0.08) !important;
-}
-.nav-login-link.active::after {
-  display: none !important;
-}
-
-/* Luxury Animated Sign Up Button */
-.nav-signup-btn {
+/* Shared Luxury Animated Nav Button (Used for both Log In & Sign Up) */
+.nav-auth-btn,
+.nav-signup-btn,
+.nav-login-btn {
   position: relative;
   display: inline-flex !important;
   align-items: center;
@@ -180,13 +162,15 @@ button { cursor: pointer; font-family: inherit; }
   text-decoration: none !important;
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(15, 27, 60, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer;
   z-index: 1;
 }
 
-/* Glowing sheen animation sweeping across button */
-.nav-signup-btn::before {
+/* Fast glowing sheen sweep animation across buttons */
+.nav-auth-btn::before,
+.nav-signup-btn::before,
+.nav-login-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -196,17 +180,24 @@ button { cursor: pointer; font-family: inherit; }
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.32) 50%,
     transparent 100%
   );
   transform: skewX(-25deg);
-  animation: navBtnSheen 4.5s ease-in-out infinite;
+  animation: navBtnSheen 2.6s ease-in-out infinite;
   pointer-events: none;
   z-index: 2;
 }
 
-/* Hover: elevated midnight navy with subtle gold ambient glow */
-.nav-signup-btn:hover {
+/* Stagger the Sign Up button slightly for a wave effect */
+.nav-signup-btn::before {
+  animation-delay: 0.35s;
+}
+
+/* Hover: elevated midnight navy with ambient gold glow */
+.nav-auth-btn:hover,
+.nav-signup-btn:hover,
+.nav-login-btn:hover {
   background: linear-gradient(135deg, #172752 0%, #223872 100%) !important;
   color: #ffffff !important;
   border-color: rgba(200, 146, 42, 0.95) !important;
@@ -214,21 +205,29 @@ button { cursor: pointer; font-family: inherit; }
   transform: translateY(-2px);
 }
 
-/* Interactive arrow transition */
+/* Snappy arrow / icon hover nudge */
+.nav-btn-icon,
 .nav-signup-arrow {
   color: var(--gold-pale);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
   display: inline-block;
   flex-shrink: 0;
 }
-.nav-signup-btn:hover .nav-signup-arrow {
+.nav-auth-btn:hover .nav-btn-icon,
+.nav-auth-btn:hover .nav-signup-arrow,
+.nav-signup-btn:hover .nav-signup-arrow,
+.nav-login-btn:hover .nav-btn-icon {
   transform: translateX(3px);
   color: #ffffff;
 }
 
-/* Tactile Click / Active state: smooth responsive press, prevents turning gold */
+/* Tactile Click / Active state: smooth responsive press, never turns gold */
+.nav-auth-btn:active,
+.nav-auth-btn:focus-visible,
 .nav-signup-btn:active,
-.nav-signup-btn:focus-visible {
+.nav-signup-btn:focus-visible,
+.nav-login-btn:active,
+.nav-login-btn:focus-visible {
   background: #0f1b3c !important;
   color: #ffffff !important;
   border-color: var(--gold) !important;
@@ -236,20 +235,24 @@ button { cursor: pointer; font-family: inherit; }
   box-shadow: 0 2px 8px rgba(15, 27, 60, 0.25) !important;
 }
 
-/* Suppress nav-links underline & text color shift when on /signup */
-.nav-signup-btn.active::after {
+/* Suppress nav-links underline & color shift when on /login or /signup */
+.nav-auth-btn.active::after,
+.nav-signup-btn.active::after,
+.nav-login-btn.active::after {
   display: none !important;
 }
-.nav-signup-btn.active {
+.nav-auth-btn.active,
+.nav-signup-btn.active,
+.nav-login-btn.active {
   color: #ffffff !important;
   border-color: var(--gold) !important;
 }
 
 @keyframes navBtnSheen {
-  0%, 65% {
+  0%, 45% {
     left: -120%;
   }
-  85%, 100% {
+  75%, 100% {
     left: 200%;
   }
 }
