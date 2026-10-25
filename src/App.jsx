@@ -11,6 +11,7 @@ import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import VolunteerForm from './pages/VolunteerForm';
 
 export default function App() {
   const location = useLocation();
@@ -31,6 +32,8 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/volunteer-form" element={<VolunteerForm />} />
+        <Route path="/volunteer-registration" element={<VolunteerForm />} />
       </Routes>
 
       {!isStandalonePage && <Footer />}

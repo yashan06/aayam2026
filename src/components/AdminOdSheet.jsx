@@ -149,10 +149,15 @@ export default function AdminOdSheet() {
   const [bulkClass, setBulkClass] = useState('');
   const [selectedBulkQids, setSelectedBulkQids] = useState(new Set());
 
+  // Volunteer Data Collection Mode State
+  const [dataCollectionMode, setDataCollectionMode] = useState('off');
+  const [togglingMode, setTogglingMode] = useState(false);
+  const [loadingVolunteers, setLoadingVolunteers] = useState(false);
+
   // Add / Edit Volunteer Modal (in Master list)
   const [showVolunteerModal, setShowVolunteerModal] = useState(false);
   const [editingQid, setEditingQid] = useState(null);
-  const [volunteerForm, setVolunteerForm] = useState({ name: '', qid: '', sem: 1, cls: '' });
+  const [volunteerForm, setVolunteerForm] = useState({ name: '', qid: '', sem: 1, cls: '', cat: 'Management', phone: '', email: '' });
   const [volunteerFormErr, setVolunteerFormErr] = useState('');
 
   // Master List Filters
@@ -171,6 +176,102 @@ export default function AdminOdSheet() {
     setTimeout(() => {
       setToastMessage(prev => ({ ...prev, visible: false }));
     }, 3200);
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('aayam_token') || localStorage.getItem('aayam_admin_token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
+  // Fetch current data collection mode from server
+  const fetchVolunteerMode = async () => {
+    try {
+      const res = await fetch('/api/volunteer-mode?t=' + Date.now());
+      const data = await res.json();
+      if (data && data.success) {
+        setDataCollectionMode(data.mode);
+      }
+    } catch (e) {
+      console.error('Error fetching volunteer mode:', e);
+    }
+  };
+
+  // Fetch master volunteers list from server
+  const fetchVolunteersFromApi = async () => {
+    setLoadingVolunteers(true);
+    try {
+      const res = await fetch('/api/volunteers?t=' + Date.now());
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.volunteers) && data.volunteers.length > 0) {
+        setMasterVolunteers(data.volunteers);
+        try {
+          localStorage.setItem('aayam.od.master.v3', JSON.stringify(data.volunteers));
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.error('Error fetching volunteers from server:', e);
+    } finally {
+      setLoadingVolunteers(false);
+    }
+  };
+
+  // Poll volunteer mode & sync volunteers on mount
+  useEffect(() => {
+    fetchVolunteerMode();
+    fetchVolunteersFromApi();
+
+    const interval = setInterval(() => {
+      fetchVolunteerMode();
+      fetchVolunteersFromApi();
+    }, 20000); // 20s background sync
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Admin Toggle Data Collection Mode (ON / OFF)
+  const handleToggleDataMode = async () => {
+    const nextMode = dataCollectionMode === 'on' ? 'off' : 'on';
+    setTogglingMode(true);
+    try {
+      const res = await fetch('/api/admin/volunteer-mode', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ mode: nextMode })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setDataCollectionMode(data.mode);
+        showToast(
+          data.mode === 'on'
+            ? '🟢 Volunteer Data Collection is now ACTIVE! Form is visible to students.'
+            : '🔴 Volunteer Data Collection is now OFF! Form is locked.',
+          data.mode === 'on' ? 'success' : 'warning'
+        );
+      } else {
+        showToast(data.error || 'Failed to toggle mode. Please ensure you are logged in as admin.', 'error');
+      }
+    } catch (e) {
+      console.error('Error toggling volunteer mode:', e);
+      showToast('Network error while updating data collection mode.', 'error');
+    } finally {
+      setTogglingMode(false);
+    }
+  };
+
+  const copyVolunteerFormLink = () => {
+    const url = window.location.origin + '/volunteer-form';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Volunteer registration form link copied to clipboard!', 'success');
+      }).catch(() => {
+        showToast('Form Link: ' + url, 'info');
+      });
+    } else {
+      showToast('Form Link: ' + url, 'info');
+    }
   };
 
   // Save Event Details
@@ -363,24 +464,36 @@ export default function AdminOdSheet() {
   // Master List Actions
   const openAddVolunteerModal = () => {
     setEditingQid(null);
-    setVolunteerForm({ name: '', qid: '', sem: 1, cls: '' });
+    setVolunteerForm({ name: '', qid: '', sem: 1, cls: '', cat: 'Management', phone: '', email: '' });
     setVolunteerFormErr('');
     setShowVolunteerModal(true);
   };
 
   const openEditVolunteerModal = (vol) => {
     setEditingQid(vol.qid);
-    setVolunteerForm({ name: vol.name, qid: vol.qid, sem: vol.sem, cls: vol.cls });
+    setVolunteerForm({
+      name: vol.name,
+      qid: vol.qid,
+      sem: vol.sem,
+      cls: vol.cls,
+      cat: vol.cat || 'Management',
+      phone: vol.phone || '',
+      email: vol.email || ''
+    });
     setVolunteerFormErr('');
     setShowVolunteerModal(true);
   };
 
-  const handleSaveVolunteer = (e) => {
+  const handleSaveVolunteer = async (e) => {
     e.preventDefault();
     const name = volunteerForm.name.trim();
-    const qid = volunteerForm.qid.trim();
+    const qid = volunteerForm.qid.trim().toUpperCase();
     const cls = volunteerForm.cls.trim();
     const sem = parseInt(volunteerForm.sem, 10);
+    const cat = volunteerForm.cat ? volunteerForm.cat.trim() : 'Management';
+    const phone = volunteerForm.phone ? volunteerForm.phone.trim() : '';
+    const email = volunteerForm.email ? volunteerForm.email.trim() : '';
+
     if (!name || !qid || !cls) {
       setVolunteerFormErr("Name, KU ID, and Class are required.");
       return;
@@ -392,17 +505,43 @@ export default function AdminOdSheet() {
       setVolunteerFormErr(`KU ID ${qid} already exists in master database.`);
       return;
     }
-    const rec = { name, qid, sem, cls };
-    if (editingQid) {
-      const updatedMaster = masterVolunteers.map(v => v.qid.toLowerCase() === editingQid.toLowerCase() ? rec : v);
-      updateAndSaveMaster(updatedMaster);
-      // update in active list if present
-      const updatedList = odList.map(l => l.qid.toLowerCase() === editingQid.toLowerCase() ? { ...l, ...rec } : l);
-      updateAndSaveOdList(updatedList);
-      showToast("Volunteer updated.", 'success');
-    } else {
-      updateAndSaveMaster([...masterVolunteers, rec]);
-      showToast("Volunteer added to master list.", 'success');
+    const rec = { name, qid, sem, cls, cat, phone, email };
+
+    try {
+      if (editingQid) {
+        const found = masterVolunteers.find(v => v.qid.toLowerCase() === editingQid.toLowerCase());
+        if (found && found.id) {
+          await fetch(`/api/admin/volunteers/${found.id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(rec)
+          });
+        }
+        const updatedMaster = masterVolunteers.map(v => v.qid.toLowerCase() === editingQid.toLowerCase() ? { ...v, ...rec } : v);
+        updateAndSaveMaster(updatedMaster);
+        const updatedList = odList.map(l => l.qid.toLowerCase() === editingQid.toLowerCase() ? { ...l, ...rec } : l);
+        updateAndSaveOdList(updatedList);
+        showToast("Volunteer updated.", 'success');
+      } else {
+        const res = await fetch('/api/admin/volunteers', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(rec)
+        });
+        const resData = await res.json();
+        const savedId = resData && resData.id ? resData.id : Date.now();
+        updateAndSaveMaster([...masterVolunteers, { ...rec, id: savedId }]);
+        showToast("Volunteer added to master list.", 'success');
+      }
+    } catch (err) {
+      console.error('Error syncing volunteer to server:', err);
+      if (editingQid) {
+        const updatedMaster = masterVolunteers.map(v => v.qid.toLowerCase() === editingQid.toLowerCase() ? { ...v, ...rec } : v);
+        updateAndSaveMaster(updatedMaster);
+      } else {
+        updateAndSaveMaster([...masterVolunteers, rec]);
+      }
+      showToast("Saved locally.", 'info');
     }
     setShowVolunteerModal(false);
   };
@@ -412,7 +551,17 @@ export default function AdminOdSheet() {
       open: true,
       title: "Delete Volunteer",
       message: `Delete ${vol.name} (${vol.qid}) from Master Database?`,
-      onConfirm: () => {
+      onConfirm: async () => {
+        try {
+          if (vol.id) {
+            await fetch(`/api/admin/volunteers/${vol.id}`, {
+              method: 'DELETE',
+              headers: getAuthHeaders()
+            });
+          }
+        } catch (err) {
+          console.error('Error deleting volunteer from server:', err);
+        }
         const updated = masterVolunteers.filter(v => v.qid.toLowerCase() !== vol.qid.toLowerCase());
         updateAndSaveMaster(updated);
         showToast("Volunteer deleted.", 'warning');
@@ -434,14 +583,16 @@ export default function AdminOdSheet() {
   };
 
   const handleExportCsv = () => {
-    const header = "Name,QID,Semester,Class\r\n";
-    const rows = masterVolunteers.map(v => `"${v.name.replace(/"/g, '""')}","${v.qid.replace(/"/g, '""')}",${v.sem},"${v.cls.replace(/"/g, '""')}"`).join("\r\n");
+    const header = "Name,QID,Semester,Class,Department,Phone,Email\r\n";
+    const rows = masterVolunteers.map(v => 
+      `"${(v.name || '').replace(/"/g, '""')}","${(v.qid || '').replace(/"/g, '""')}",${v.sem || 1},"${(v.cls || '').replace(/"/g, '""')}","${(v.cat || 'Management').replace(/"/g, '""')}","${(v.phone || '').replace(/"/g, '""')}","${(v.email || '').replace(/"/g, '""')}"`
+    ).join("\r\n");
     downloadCsv(`aayam_master_volunteers_${new Date().toISOString().slice(0, 10)}.csv`, header + rows);
     showToast("Master volunteers exported to CSV.", 'success');
   };
 
   const handleDownloadTemplate = () => {
-    const template = "Name,QID,Semester,Class\r\nAsha Patel,KU2507U0001,3,CSE-A\r\nRahul Sharma,KU2507U0002,5,CSE-CYBER\r\n";
+    const template = "Name,QID,Semester,Class,Department,Phone,Email\r\nAsha Patel,KU2507U0001,3,CSE-A,Technical,9876543210,asha@ku.edu.in\r\nRahul Sharma,KU2507U0002,5,CSE-CYBER,Management,9876543211,rahul@ku.edu.in\r\n";
     downloadCsv("aayam_volunteers_template.csv", template);
     showToast("CSV Template downloaded.", 'info');
   };
@@ -456,21 +607,32 @@ export default function AdminOdSheet() {
         const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
         if (lines.length < 2) throw new Error("CSV file is empty or missing data rows.");
         const header = lines[0].toLowerCase().split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-        if (header.join(',') !== "name,qid,semester,class") {
-          throw new Error("Header must be: Name,QID,Semester,Class");
+        const isHeaderValid = header.includes('name') && header.includes('qid');
+        if (!isHeaderValid) {
+          throw new Error("CSV must contain at least 'Name' and 'QID' columns.");
         }
         let added = 0;
         let skipped = 0;
         const currentQids = new Set(masterVolunteers.map(v => v.qid.toLowerCase()));
         const newVolunteers = [...masterVolunteers];
+        const toSyncBackend = [];
 
         for (let i = 1; i < lines.length; i++) {
           const parts = lines[i].split(',').map(p => p.trim().replace(/^"|"$/g, ''));
-          if (parts.length >= 4) {
-            const [name, qid, semStr, cls] = parts;
-            const sem = parseInt(semStr.replace(/\D/g, ''), 10);
-            if (name && qid && cls && sem >= 1 && sem <= 8 && !currentQids.has(qid.toLowerCase())) {
-              newVolunteers.push({ name, qid, sem, cls });
+          if (parts.length >= 2) {
+            const name = parts[0];
+            const qid = parts[1];
+            const semStr = parts[2] || '1';
+            const cls = parts[3] || 'General';
+            const cat = parts[4] || 'Management';
+            const phone = parts[5] || '';
+            const email = parts[6] || '';
+            const sem = parseInt(semStr.replace(/\D/g, ''), 10) || 1;
+
+            if (name && qid && !currentQids.has(qid.toLowerCase())) {
+              const rec = { name, qid, sem, cls, cat, phone, email };
+              newVolunteers.push(rec);
+              toSyncBackend.push(rec);
               currentQids.add(qid.toLowerCase());
               added++;
             } else {
@@ -479,6 +641,16 @@ export default function AdminOdSheet() {
           }
         }
         updateAndSaveMaster(newVolunteers);
+
+        // Sync to backend bulk-import API
+        if (toSyncBackend.length > 0) {
+          fetch('/api/admin/volunteers/bulk-import', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ list: toSyncBackend })
+          }).catch(e => console.error('Error syncing imported volunteers to server:', e));
+        }
+
         showToast(`Imported ${added} volunteers (${skipped} skipped/duplicates).`, added > 0 ? 'success' : 'warning');
       } catch (err) {
         showToast("Import failed: " + err.message, 'error');
@@ -638,6 +810,175 @@ export default function AdminOdSheet() {
             }}
           >
             👥 Master Volunteers ({masterVolunteers.length})
+          </button>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* VOLUNTEER DATA COLLECTION MODE CONTROL CARD */}
+      {/* ======================================================== */}
+      <div className="noprint" style={{
+        background: dataCollectionMode === 'on'
+          ? 'linear-gradient(135deg, rgba(20, 83, 45, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)'
+          : 'linear-gradient(135deg, rgba(127, 29, 29, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)',
+        border: dataCollectionMode === 'on'
+          ? '1.5px solid rgba(34, 197, 94, 0.5)'
+          : '1.5px solid rgba(239, 68, 68, 0.5)',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        marginBottom: '24px',
+        boxShadow: dataCollectionMode === 'on'
+          ? '0 10px 30px rgba(34, 197, 94, 0.12)'
+          : '0 10px 30px rgba(239, 68, 68, 0.12)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '18px'
+      }}>
+        {/* Left: Mode Status & Description */}
+        <div style={{ flex: '1 1 360px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              fontSize: '11px',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              background: dataCollectionMode === 'on' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              color: dataCollectionMode === 'on' ? '#4ade80' : '#f87171',
+              border: dataCollectionMode === 'on' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)'
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: dataCollectionMode === 'on' ? '#22c55e' : '#ef4444',
+                display: 'inline-block',
+                boxShadow: dataCollectionMode === 'on' ? '0 0 10px #22c55e' : 'none'
+              }}></span>
+              {dataCollectionMode === 'on' ? 'Data Mode: ON (Active Registration)' : 'Data Mode: OFF (Portal Locked)'}
+            </span>
+            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
+              • {masterVolunteers.length} registered in Database
+            </span>
+          </div>
+
+          <h3 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+            Volunteer Data Collection Mode
+          </h3>
+          <p style={{ margin: 0, fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5 }}>
+            {dataCollectionMode === 'on'
+              ? '🟢 Students can access the Volunteer Form and submit their details. Newly submitted records appear instantly in your Master Volunteers list and OD Sheet generator.'
+              : '🔴 The public registration form is currently locked for students. Click "Turn ON Data Mode" below when you want to collect volunteer responses.'}
+          </p>
+        </div>
+
+        {/* Right: Actions (Copy Link + Open Form + Sync + Toggle Button) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={copyVolunteerFormLink}
+            style={{
+              padding: '9px 15px',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Copy public link to student volunteer registration form"
+          >
+            📋 Copy Form Link
+          </button>
+
+          <a
+            href="/volunteer-form"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: '9px 15px',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#93c5fd',
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Preview student volunteer registration form in a new tab"
+          >
+            🔗 Open Form ↗
+          </a>
+
+          <button
+            type="button"
+            onClick={fetchVolunteersFromApi}
+            disabled={loadingVolunteers}
+            style={{
+              padding: '9px 14px',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: loadingVolunteers ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Refresh volunteer list from server database"
+          >
+            🔄 {loadingVolunteers ? 'Syncing...' : 'Sync Data'}
+          </button>
+
+          {/* Toggle Button */}
+          <button
+            type="button"
+            onClick={handleToggleDataMode}
+            disabled={togglingMode}
+            style={{
+              padding: '11px 22px',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: togglingMode ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: 800,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease',
+              background: dataCollectionMode === 'on'
+                ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'
+                : 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)',
+              color: '#ffffff',
+              boxShadow: dataCollectionMode === 'on'
+                ? '0 4px 16px rgba(239, 68, 68, 0.45)'
+                : '0 4px 16px rgba(34, 197, 94, 0.45)'
+            }}
+          >
+            {togglingMode ? (
+              'Updating Mode...'
+            ) : dataCollectionMode === 'on' ? (
+              'Turn OFF Data Mode 🔒'
+            ) : (
+              'Turn ON Data Mode 🟢'
+            )}
           </button>
         </div>
       </div>
@@ -1219,30 +1560,44 @@ export default function AdminOdSheet() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 5 }}>
                 <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#475569' }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Student Name</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>KU ID</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>Sem</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Class / Branch</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>Student Name</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>KU ID</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'center' }}>Sem</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>Class / Branch</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>Work Category</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>Mobile / WhatsApp</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left' }}>Email</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMaster.length > 0 ? (
                   filteredMaster.map(v => (
                     <tr key={v.qid} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td style={{ padding: '12px 14px' }}>
                         <strong style={{ color: 'var(--navy)' }}>{v.name}</strong>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <code>{v.qid}</code>
+                      <td style={{ padding: '12px 14px' }}>
+                        <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{v.qid}</code>
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: '12px', background: '#f1f5f9', fontSize: '11px', fontWeight: 700 }}>
+                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '12px', background: '#e0f2fe', color: '#0369a1', fontSize: '11px', fontWeight: 700 }}>
                           Sem {v.sem}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#475569' }}>{v.cls}</td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      <td style={{ padding: '12px 14px', color: '#475569' }}>{v.cls}</td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: '6px', background: '#fef3c7', color: '#92400e', fontSize: '11px', fontWeight: 700 }}>
+                          {v.cat || 'Management'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px', color: '#334155', fontSize: '12px' }}>
+                        {v.phone || '—'}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: '#334155', fontSize: '12px' }}>
+                        {v.email || '—'}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '6px' }}>
                           <button
                             type="button"
@@ -1264,7 +1619,7 @@ export default function AdminOdSheet() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan="8" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
                       No volunteers match your search filters.
                     </td>
                   </tr>
@@ -1519,6 +1874,42 @@ export default function AdminOdSheet() {
                       placeholder="e.g. CSE-A / AIML"
                       value={volunteerForm.cls}
                       onChange={(e) => setVolunteerForm({ ...volunteerForm, cls: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Work Department / Category</label>
+                  <select
+                    value={volunteerForm.cat || 'Management'}
+                    onChange={(e) => setVolunteerForm({ ...volunteerForm, cat: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '14px', outline: 'none', background: '#fff' }}
+                  >
+                    {CATS.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Mobile / WhatsApp</label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={volunteerForm.phone || ''}
+                      onChange={(e) => setVolunteerForm({ ...volunteerForm, phone: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="e.g. student@ku.edu.in"
+                      value={volunteerForm.email || ''}
+                      onChange={(e) => setVolunteerForm({ ...volunteerForm, email: e.target.value })}
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
                     />
                   </div>

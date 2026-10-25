@@ -862,6 +862,258 @@ app.delete('/api/admin/events/:id', authAdmin, async (req, res) => {
   }
 });
 
+// ==========================================
+// VOLUNTEER REGISTRATION & OD SHEET MASTER DATA APIS
+// ==========================================
+
+// 1. Get Volunteer Data Collection Mode (Public)
+app.get('/api/volunteer-mode', async (req, res) => {
+  try {
+    const row = await dbGet(`SELECT value FROM system_settings WHERE key = 'volunteer_collection_mode'`);
+    const mode = row ? row.value : 'off';
+    res.json({ success: true, mode });
+  } catch (err) {
+    console.error('Error fetching volunteer mode:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch volunteer data mode.' });
+  }
+});
+
+// 2. Toggle Volunteer Data Collection Mode (Admin Only)
+app.post('/api/admin/volunteer-mode', authAdmin, async (req, res) => {
+  try {
+    const { mode } = req.body;
+    if (mode !== 'on' && mode !== 'off') {
+      return res.status(400).json({ success: false, error: 'Mode must be either "on" or "off".' });
+    }
+
+    await dbRun(
+      `INSERT INTO system_settings (key, value) VALUES ('volunteer_collection_mode', ?)
+       ON CONFLICT(key) DO UPDATE SET value = ?`,
+      [mode, mode]
+    );
+
+    res.json({
+      success: true,
+      mode,
+      message: mode === 'on' ? 'Volunteer data collection mode is now ACTIVE (Form is Open).' : 'Volunteer data collection mode is now OFF (Form is Closed).'
+    });
+  } catch (err) {
+    console.error('Error updating volunteer mode:', err);
+    res.status(500).json({ success: false, error: 'Failed to update volunteer data collection mode.' });
+  }
+});
+
+// 3. Get Master Volunteers List (Public / Admin for OD Sheet generator)
+app.get('/api/volunteers', async (req, res) => {
+  try {
+    const volunteers = await dbAll(`SELECT * FROM volunteers ORDER BY name ASC`);
+    res.json({ success: true, volunteers });
+  } catch (err) {
+    console.error('Error fetching volunteers:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch volunteers.' });
+  }
+});
+
+// 4. Public Volunteer Registration Submission
+// All fields compulsory: Full Name, KU ID, Semester, Class/Branch, Work Category, Phone Number, Email
+app.post('/api/volunteers', async (req, res) => {
+  try {
+    // Check if data collection mode is ON
+    const modeRow = await dbGet(`SELECT value FROM system_settings WHERE key = 'volunteer_collection_mode'`);
+    const isModeOn = modeRow && modeRow.value === 'on';
+    if (!isModeOn) {
+      return res.status(403).json({
+        success: false,
+        error: 'Volunteer registration is currently CLOSED by the administration. Submissions are not accepted at this time.'
+      });
+    }
+
+    const { name, qid, sem, cls, cat, phone, email } = req.body;
+
+    // Strict validation: ALL fields compulsory
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Full Student Name is compulsory.' });
+    }
+    if (!qid || !qid.trim()) {
+      return res.status(400).json({ success: false, error: 'KU ID / Enrollment Number is compulsory.' });
+    }
+    if (sem === undefined || sem === null || sem === '' || isNaN(Number(sem))) {
+      return res.status(400).json({ success: false, error: 'Semester (Sem 1 to 8) is compulsory.' });
+    }
+    const parsedSem = parseInt(sem, 10);
+    if (parsedSem < 1 || parsedSem > 8) {
+      return res.status(400).json({ success: false, error: 'Semester must be between 1 and 8.' });
+    }
+    if (!cls || !cls.trim()) {
+      return res.status(400).json({ success: false, error: 'Class / Branch / Division is compulsory.' });
+    }
+    if (!cat || !cat.trim()) {
+      return res.status(400).json({ success: false, error: 'Work Category / Department is compulsory.' });
+    }
+    if (!phone || !phone.trim() || phone.trim().replace(/\D/g, '').length < 10) {
+      return res.status(400).json({ success: false, error: 'A valid Mobile / WhatsApp Number (at least 10 digits) is compulsory.' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !email.trim() || !emailRegex.test(email.trim())) {
+      return res.status(400).json({ success: false, error: 'A valid Email Address is compulsory.' });
+    }
+
+    const cleanName = name.trim();
+    const cleanQid = qid.trim().toUpperCase();
+    const cleanCls = cls.trim();
+    const cleanCat = cat.trim();
+    const cleanPhone = phone.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if volunteer with this KU ID already exists
+    const existing = await dbGet(`SELECT id FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
+    if (existing) {
+      await dbRun(
+        `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
+        [cleanName, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existing.id]
+      );
+
+      return res.json({
+        success: true,
+        message: `Volunteer data for ${cleanName} (${cleanQid}) has been updated successfully!`,
+        volunteer: { id: existing.id, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+      });
+    } else {
+      const result = await dbRun(
+        `INSERT INTO volunteers (name, qid, sem, cls, cat, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [cleanName, cleanQid, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: `Volunteer registration for ${cleanName} (${cleanQid}) submitted successfully!`,
+        volunteer: { id: result.lastID, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+      });
+    }
+  } catch (err) {
+    console.error('Error submitting volunteer registration:', err);
+    res.status(500).json({ success: false, error: 'Failed to process volunteer registration.' });
+  }
+});
+
+// 5. Admin: Add Volunteer Manually
+app.post('/api/admin/volunteers', authAdmin, async (req, res) => {
+  try {
+    const { name, qid, sem, cls, cat, phone, email } = req.body;
+
+    if (!name || !name.trim() || !qid || !qid.trim() || !cls || !cls.trim()) {
+      return res.status(400).json({ success: false, error: 'Name, KU ID, and Class are required.' });
+    }
+
+    const cleanName = name.trim();
+    const cleanQid = qid.trim().toUpperCase();
+    const cleanSem = parseInt(sem, 10) || 1;
+    const cleanCls = cls.trim();
+    const cleanCat = cat ? cat.trim() : 'Management';
+    const cleanPhone = phone ? phone.trim() : '';
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+
+    const existing = await dbGet(`SELECT id FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
+    if (existing) {
+      await dbRun(
+        `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
+        [cleanName, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existing.id]
+      );
+      return res.json({ success: true, message: 'Volunteer updated successfully.', id: existing.id });
+    }
+
+    const result = await dbRun(
+      `INSERT INTO volunteers (name, qid, sem, cls, cat, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [cleanName, cleanQid, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
+    );
+
+    res.status(201).json({ success: true, message: 'Volunteer added successfully.', id: result.lastID });
+  } catch (err) {
+    console.error('Error adding volunteer:', err);
+    res.status(500).json({ success: false, error: 'Failed to add volunteer.' });
+  }
+});
+
+// 6. Admin: Update Volunteer
+app.put('/api/admin/volunteers/:id', authAdmin, async (req, res) => {
+  try {
+    const { name, qid, sem, cls, cat, phone, email } = req.body;
+    if (!name || !qid || !cls) {
+      return res.status(400).json({ success: false, error: 'Name, KU ID, and Class are required.' });
+    }
+
+    await dbRun(
+      `UPDATE volunteers SET name = ?, qid = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
+      [name.trim(), qid.trim().toUpperCase(), parseInt(sem, 10) || 1, cls.trim(), (cat || 'Management').trim(), (phone || '').trim(), (email || '').trim().toLowerCase(), req.params.id]
+    );
+
+    res.json({ success: true, message: 'Volunteer updated successfully.' });
+  } catch (err) {
+    console.error('Error updating volunteer:', err);
+    res.status(500).json({ success: false, error: 'Failed to update volunteer.' });
+  }
+});
+
+// 7. Admin: Delete Volunteer
+app.delete('/api/admin/volunteers/:id', authAdmin, async (req, res) => {
+  try {
+    await dbRun(`DELETE FROM volunteers WHERE id = ?`, [req.params.id]);
+    res.json({ success: true, message: 'Volunteer removed.' });
+  } catch (err) {
+    console.error('Error deleting volunteer:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete volunteer.' });
+  }
+});
+
+// 8. Admin: Bulk Import Volunteers
+app.post('/api/admin/volunteers/bulk-import', authAdmin, async (req, res) => {
+  try {
+    const { list } = req.body;
+    if (!Array.isArray(list) || list.length === 0) {
+      return res.status(400).json({ success: false, error: 'Valid array of volunteers is required.' });
+    }
+
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    for (const v of list) {
+      if (!v.name || !v.qid) continue;
+      const cleanName = v.name.trim();
+      const cleanQid = v.qid.trim().toUpperCase();
+      const cleanSem = parseInt(v.sem, 10) || 1;
+      const cleanCls = (v.cls || '').trim();
+      const cleanCat = (v.cat || 'Management').trim();
+      const cleanPhone = (v.phone || '').trim();
+      const cleanEmail = (v.email || '').trim();
+
+      const existing = await dbGet(`SELECT id FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
+      if (existing) {
+        await dbRun(
+          `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
+          [cleanName, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existing.id]
+        );
+        updatedCount++;
+      } else {
+        await dbRun(
+          `INSERT INTO volunteers (name, qid, sem, cls, cat, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [cleanName, cleanQid, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
+        );
+        addedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Bulk import completed. Added: ${addedCount}, Updated: ${updatedCount}.`,
+      addedCount,
+      updatedCount
+    });
+  } catch (err) {
+    console.error('Error bulk importing volunteers:', err);
+    res.status(500).json({ success: false, error: 'Failed to bulk import volunteers.' });
+  }
+});
+
 // SPA Fallback Route for React Router
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();

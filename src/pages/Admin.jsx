@@ -624,7 +624,7 @@ export default function Admin() {
             { id: 'team', label: '👥 Team', count: teamList.length },
             { id: 'gallery', label: '🖼️ Gallery', count: galleryList.length },
             { id: 'moments', label: '✨ Moments', count: momentsList.length },
-            { id: 'od_sheet', label: '📄 OD Sheet Generator', count: 'Auto' }
+            { id: 'od_sheet', label: '📄 OD Sheet & Volunteers', count: 'Live' }
           ].map(tab => (
             <button
               key={tab.id}
