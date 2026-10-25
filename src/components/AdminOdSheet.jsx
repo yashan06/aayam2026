@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const LOGO_KU = '/karnavati_logo.png';
+const LOGO_UIT = '/uit_logo.png';
 const LOGO_AY = '/aayam_logo.png';
 
 const CATS = [
@@ -1009,17 +1010,29 @@ export default function AdminOdSheet() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '12px',
+                  gap: '10px',
                   borderBottom: '2px solid #000000',
                   paddingBottom: '8px'
                 }}>
-                  <div style={{ width: '58mm', height: '18mm', display: 'flex', alignItems: 'center' }}>
-                    <img src={LOGO_KU} alt="Karnavati University" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                  {/* Left Logos: Karnavati University + UIT */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '18mm' }}>
+                    <div style={{ width: '46mm', height: '18mm', display: 'flex', alignItems: 'center' }}>
+                      <img src={LOGO_KU} alt="Karnavati University" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                    </div>
+                    <div style={{ width: '1px', height: '14mm', background: '#000000', opacity: 0.35 }}></div>
+                    <div style={{ width: '16mm', height: '18mm', display: 'flex', alignItems: 'center' }}>
+                      <img src={LOGO_UIT} alt="UIT" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'center', flex: 1 }}>
-                    <b style={{ fontSize: '17px', display: 'block', textTransform: 'uppercase' }}>Karnavati University</b>
-                    <div style={{ fontSize: '13px', fontWeight: 700, marginTop: '2px' }}>AAYAM – UIT Students Committee</div>
+
+                  {/* Center Text */}
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0 6px' }}>
+                    <b style={{ fontSize: '16px', display: 'block', textTransform: 'uppercase' }}>Karnavati University</b>
+                    <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>UNITEDWORLD INSTITUTE OF TECHNOLOGY</div>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#222222' }}>AAYAM – UIT Students Committee</div>
                   </div>
+
+                  {/* Right Logo: AAYAM */}
                   <div style={{ width: '22mm', height: '22mm', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     <img src={LOGO_AY} alt="AAYAM" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
                   </div>
