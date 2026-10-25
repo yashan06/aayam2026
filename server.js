@@ -928,7 +928,7 @@ app.post('/api/volunteers', async (req, res) => {
       });
     }
 
-    const { name, qid, sem, cls, cat, phone, email } = req.body;
+    const { name, qid, sem, cls, cat, phone, email, allow_update } = req.body;
 
     // Strict validation: ALL fields compulsory
     if (!name || !name.trim()) {
@@ -965,31 +965,79 @@ app.post('/api/volunteers', async (req, res) => {
     const cleanPhone = phone.trim();
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check if volunteer with this KU ID already exists
-    const existing = await dbGet(`SELECT id FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
-    if (existing) {
+    // 1. Check if another volunteer has already registered with this Email address
+    const existingByEmail = await dbGet(
+      `SELECT * FROM volunteers WHERE LOWER(email) = ? AND email != '' AND UPPER(qid) != ?`,
+      [cleanEmail, cleanQid]
+    );
+    if (existingByEmail) {
+      return res.status(409).json({
+        success: false,
+        already_exists: true,
+        duplicate_field: 'email',
+        error: `A volunteer is already registered with this email address (${cleanEmail}). Each student must use their own unique email.`,
+        message: `A volunteer record for "${existingByEmail.name}" (${existingByEmail.qid}) already exists with this email address.`,
+        existing_volunteer: {
+          name: existingByEmail.name,
+          qid: existingByEmail.qid,
+          sem: existingByEmail.sem,
+          cls: existingByEmail.cls,
+          cat: existingByEmail.cat,
+          phone: existingByEmail.phone,
+          email: existingByEmail.email
+        }
+      });
+    }
+
+    // 2. Check if a volunteer with this KU ID already exists
+    const existingByQid = await dbGet(`SELECT * FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
+    if (existingByQid) {
+      // If user hasn't explicitly clicked "Refill / Update My Form", inform them that they have already filled the form
+      if (!allow_update) {
+        return res.status(409).json({
+          success: false,
+          already_exists: true,
+          duplicate_field: 'qid',
+          error: `You have already filled the volunteer registration form! A record with KU ID ${cleanQid} (${existingByQid.name}) is already registered.`,
+          message: 'You have already filled this form! If you made a mistake or want to update your department or details, you can choose "Refill / Update Form".',
+          existing_volunteer: {
+            name: existingByQid.name,
+            qid: existingByQid.qid,
+            sem: existingByQid.sem,
+            cls: existingByQid.cls,
+            cat: existingByQid.cat,
+            phone: existingByQid.phone,
+            email: existingByQid.email
+          }
+        });
+      }
+
+      // User confirmed they want to refill / update their existing registration
       await dbRun(
         `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
-        [cleanName, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existing.id]
+        [cleanName, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existingByQid.id]
       );
 
       return res.json({
         success: true,
-        message: `Volunteer data for ${cleanName} (${cleanQid}) has been updated successfully!`,
-        volunteer: { id: existing.id, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
-      });
-    } else {
-      const result = await dbRun(
-        `INSERT INTO volunteers (name, qid, sem, cls, cat, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [cleanName, cleanQid, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
-      );
-
-      return res.status(201).json({
-        success: true,
-        message: `Volunteer registration for ${cleanName} (${cleanQid}) submitted successfully!`,
-        volunteer: { id: result.lastID, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+        is_update: true,
+        message: `Volunteer registration for ${cleanName} (${cleanQid}) has been successfully updated!`,
+        volunteer: { id: existingByQid.id, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
       });
     }
+
+    // 3. New unique volunteer registration
+    const result = await dbRun(
+      `INSERT INTO volunteers (name, qid, sem, cls, cat, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [cleanName, cleanQid, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
+    );
+
+    return res.status(201).json({
+      success: true,
+      is_update: false,
+      message: `Volunteer registration for ${cleanName} (${cleanQid}) recorded successfully!`,
+      volunteer: { id: result.lastID, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+    });
   } catch (err) {
     console.error('Error submitting volunteer registration:', err);
     res.status(500).json({ success: false, error: 'Failed to process volunteer registration.' });

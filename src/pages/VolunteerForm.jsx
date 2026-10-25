@@ -33,6 +33,8 @@ export default function VolunteerForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [submittedData, setSubmittedData] = useState(null);
+  const [alreadyRegisteredData, setAlreadyRegisteredData] = useState(null);
+  const [isRefillMode, setIsRefillMode] = useState(false);
 
   // Fetch current volunteer collection mode
   const fetchMode = async () => {
@@ -118,7 +120,8 @@ export default function VolunteerForm() {
         cls: formData.cls.trim(),
         cat: resolvedCat,
         phone: formData.phone.trim(),
-        email: formData.email.trim().toLowerCase()
+        email: formData.email.trim().toLowerCase(),
+        allow_update: isRefillMode
       };
 
       const res = await fetch('/api/volunteers', {
@@ -129,8 +132,21 @@ export default function VolunteerForm() {
 
       const data = await res.json();
 
+      // Check if user has already filled the form
+      if (data && data.already_exists) {
+        setAlreadyRegisteredData(data.existing_volunteer);
+        setError('');
+        window.scrollTo({ top: 320, behavior: 'smooth' });
+        return;
+      }
+
       if (res.ok && data.success) {
-        setSubmittedData(data.volunteer || payload);
+        setSubmittedData({
+          ...(data.volunteer || payload),
+          isUpdate: Boolean(data.is_update || isRefillMode)
+        });
+        setAlreadyRegisteredData(null);
+        setIsRefillMode(false);
       } else {
         setError(data.error || 'Failed to submit registration. Please verify all fields.');
       }
@@ -142,8 +158,35 @@ export default function VolunteerForm() {
     }
   };
 
+  const handleStartRefill = () => {
+    if (alreadyRegisteredData) {
+      setFormData({
+        name: alreadyRegisteredData.name || formData.name,
+        qid: alreadyRegisteredData.qid || formData.qid,
+        sem: String(alreadyRegisteredData.sem || formData.sem || '1'),
+        cls: alreadyRegisteredData.cls || formData.cls,
+        cat: CATEGORIES.includes(alreadyRegisteredData.cat) ? alreadyRegisteredData.cat : 'Other',
+        customCat: CATEGORIES.includes(alreadyRegisteredData.cat) ? '' : (alreadyRegisteredData.cat || ''),
+        phone: alreadyRegisteredData.phone || formData.phone,
+        email: alreadyRegisteredData.email || formData.email
+      });
+    }
+    setIsRefillMode(true);
+    setAlreadyRegisteredData(null);
+    setError('');
+    window.scrollTo({ top: 380, behavior: 'smooth' });
+  };
+
+  const handleCancelRefill = () => {
+    handleReset();
+    setIsRefillMode(false);
+    setAlreadyRegisteredData(null);
+  };
+
   const handleReset = () => {
     setSubmittedData(null);
+    setAlreadyRegisteredData(null);
+    setIsRefillMode(false);
     setFormData({
       name: '',
       qid: '',
@@ -318,21 +361,205 @@ export default function VolunteerForm() {
             </div>
           )}
 
-          {/* REGISTRATION ACTIVE FORM */}
-          {mode === 'on' && !submittedData && (
+          {/* 3. ALREADY REGISTERED / DUPLICATE DETECTED WARNING CARD */}
+          {alreadyRegisteredData && (
+            <div style={{
+              background: '#ffffff',
+              border: '2px solid #f59e0b',
+              borderRadius: '20px',
+              padding: '40px 32px',
+              textAlign: 'center',
+              boxShadow: '0 12px 36px rgba(245, 158, 11, 0.14)',
+              marginBottom: '32px'
+            }}>
+              <div style={{
+                width: '74px',
+                height: '74px',
+                borderRadius: '50%',
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '2px solid #f59e0b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 18px',
+                fontSize: '34px'
+              }}>
+                ⚠️
+              </div>
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 14px',
+                borderRadius: '999px',
+                background: '#fef3c7',
+                color: '#b45309',
+                fontSize: '12px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '14px'
+              }}>
+                YOU HAVE ALREADY FILLED THE FORM
+              </div>
+
+              <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--navy)', margin: '0 0 10px', fontFamily: "'Playfair Display', serif" }}>
+                Volunteer Registration Already Exists
+              </h2>
+
+              <p style={{ color: 'var(--text-mid)', fontSize: '15px', maxWidth: '580px', margin: '0 auto 26px', lineHeight: 1.6 }}>
+                A volunteer record with KU ID <strong>{alreadyRegisteredData.qid}</strong> ({alreadyRegisteredData.name}) is already recorded in the AAYAM directory. If you made a mistake or need to update your department, you can refill and update your form below.
+              </p>
+
+              {/* Already Recorded Details Preview Card */}
+              <div style={{
+                background: 'var(--cream)',
+                borderRadius: '14px',
+                border: '1.5px solid var(--border)',
+                padding: '22px 24px',
+                maxWidth: '560px',
+                margin: '0 auto 28px',
+                textAlign: 'left'
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
+                  📋 Your Currently Recorded Details:
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '13px' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Student Name</span>
+                    <strong style={{ color: 'var(--navy)', fontSize: '14px' }}>{alreadyRegisteredData.name}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>KU ID / Roll No</span>
+                    <strong style={{ color: 'var(--gold)', fontSize: '14px', fontFamily: 'monospace' }}>{alreadyRegisteredData.qid}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Semester</span>
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>Semester {alreadyRegisteredData.sem}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Class / Branch</span>
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>{alreadyRegisteredData.cls}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Work Department</span>
+                    <span style={{ color: '#0284c7', fontWeight: '700' }}>{alreadyRegisteredData.cat}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Mobile Number</span>
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>{alreadyRegisteredData.phone || '—'}</span>
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Email Address</span>
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>{alreadyRegisteredData.email || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={handleStartRefill}
+                  className="btn-primary"
+                  style={{ padding: '12px 26px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  🔄 Refill / Update My Form
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCancelRefill}
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    background: '#ffffff',
+                    color: 'var(--navy)',
+                    border: '1.5px solid var(--border)',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Enter Different KU ID
+                </button>
+
+                <Link
+                  to="/"
+                  style={{
+                    padding: '12px 20px',
+                    borderRadius: '10px',
+                    background: 'var(--cream)',
+                    color: 'var(--text-mid)',
+                    border: '1px solid var(--border)',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  Return to Website
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* 4. REGISTRATION ACTIVE FORM */}
+          {mode === 'on' && !submittedData && !alreadyRegisteredData && (
             <div style={{
               background: '#ffffff',
               borderRadius: '20px',
-              border: '1.5px solid var(--border)',
+              border: isRefillMode ? '2px solid #3b82f6' : '1.5px solid var(--border)',
               padding: '36px 32px',
-              boxShadow: 'var(--shadow-md)'
+              boxShadow: isRefillMode ? '0 10px 30px rgba(59, 130, 246, 0.12)' : 'var(--shadow-md)',
+              transition: 'all 0.3s ease'
             }}>
+              
+              {/* Refill Mode Banner */}
+              {isRefillMode && (
+                <div style={{
+                  background: '#eff6ff',
+                  border: '1.5px solid #bfdbfe',
+                  borderRadius: '12px',
+                  padding: '14px 18px',
+                  marginBottom: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '20px' }}>✏️</span>
+                    <div>
+                      <strong style={{ color: '#1e40af', fontSize: '14px', display: 'block' }}>
+                        Refill & Update Mode Active
+                      </strong>
+                      <span style={{ fontSize: '12.5px', color: '#2563eb' }}>
+                        You are updating previously registered details for KU ID: <strong>{formData.qid}</strong>. Edit any fields below and click "Update My Registration".
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRefillMode(false)}
+                    style={{ background: 'none', border: 'none', color: '#1d4ed8', fontSize: '12px', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Cancel Update
+                  </button>
+                </div>
+              )}
+
               <div style={{ borderBottom: '1.5px solid var(--border)', paddingBottom: '18px', marginBottom: '26px' }}>
                 <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--navy)', margin: '0 0 6px', fontFamily: "'Playfair Display', serif" }}>
-                  Volunteer Information Form
+                  {isRefillMode ? 'Update Volunteer Registration' : 'Volunteer Information Form'}
                 </h2>
                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-mid)' }}>
-                  Please complete all required fields accurately. These details are used directly for official On-Duty (OD) Attendance approval.
+                  {isRefillMode
+                    ? 'Modify your work department, class, or contact details below to update your official record.'
+                    : 'Please complete all required fields accurately. These details are used directly for official On-Duty (OD) Attendance approval.'}
                 </p>
               </div>
 
@@ -366,8 +593,7 @@ export default function VolunteerForm() {
                       color: 'var(--navy)',
                       fontSize: '14px',
                       outline: 'none',
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.2s ease'
+                      boxSizing: 'border-box'
                     }}
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', display: 'block' }}>
@@ -387,22 +613,24 @@ export default function VolunteerForm() {
                     onChange={handleChange}
                     placeholder="e.g. KU2407U448 or 2000016522"
                     required
+                    readOnly={isRefillMode}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       borderRadius: '10px',
-                      background: '#faf8f5',
+                      background: isRefillMode ? '#f1f5f9' : '#faf8f5',
                       border: '1.5px solid #dfd7cc',
                       color: 'var(--navy)',
                       fontFamily: 'monospace',
                       fontSize: '15px',
                       fontWeight: '700',
                       outline: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      cursor: isRefillMode ? 'not-allowed' : 'text'
                     }}
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', display: 'block' }}>
-                    Your official university roll or enrollment number.
+                    {isRefillMode ? 'KU ID is locked during refill mode.' : 'Your official university roll or enrollment number.'}
                   </span>
                 </div>
 
@@ -577,7 +805,9 @@ export default function VolunteerForm() {
                   style={{
                     padding: '15px 32px',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #c8922a 0%, #e8a93a 50%, #c8922a 100%)',
+                    background: isRefillMode
+                      ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                      : 'linear-gradient(135deg, #c8922a 0%, #e8a93a 50%, #c8922a 100%)',
                     color: '#ffffff',
                     fontSize: '15px',
                     fontWeight: '800',
@@ -585,7 +815,9 @@ export default function VolunteerForm() {
                     textTransform: 'uppercase',
                     border: 'none',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 8px 24px rgba(200, 146, 42, 0.35)',
+                    boxShadow: isRefillMode
+                      ? '0 8px 24px rgba(2, 132, 199, 0.35)'
+                      : '0 8px 24px rgba(200, 146, 42, 0.35)',
                     transition: 'all 0.2s',
                     display: 'flex',
                     alignItems: 'center',
@@ -597,17 +829,17 @@ export default function VolunteerForm() {
                   {loading ? (
                     <>
                       <span style={{ width: '16px', height: '16px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }}></span>
-                      Submitting Volunteer Data...
+                      {isRefillMode ? 'Updating Volunteer Details...' : 'Submitting Volunteer Data...'}
                     </>
                   ) : (
-                    'Submit Volunteer Registration ✨'
+                    isRefillMode ? 'Update My Volunteer Registration 🔄' : 'Submit Volunteer Registration ✨'
                   )}
                 </button>
               </form>
             </div>
           )}
 
-          {/* SUBMISSION SUCCESS CARD */}
+          {/* 5. SUBMISSION SUCCESS CARD */}
           {submittedData && (
             <div style={{
               background: '#ffffff',
@@ -621,10 +853,12 @@ export default function VolunteerForm() {
                 ✓
               </div>
               <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--navy)', margin: '0 0 10px', fontFamily: "'Playfair Display', serif" }}>
-                Registration Recorded Successfully!
+                {submittedData.isUpdate ? 'Registration Updated Successfully!' : 'Registration Recorded Successfully!'}
               </h2>
               <p style={{ color: 'var(--text-mid)', fontSize: '15px', margin: '0 auto 28px', maxWidth: '540px', lineHeight: 1.6 }}>
-                Your volunteer data has been recorded and synced directly with the AAYAM Master Volunteers database. You are now officially verified for On-Duty (OD) Attendance sheet processing.
+                {submittedData.isUpdate
+                  ? `Your volunteer registration details for ${submittedData.name} (${submittedData.qid}) have been successfully updated in the AAYAM Master Volunteers database.`
+                  : 'Your volunteer data has been recorded and synced directly with the AAYAM Master Volunteers database. You are now officially verified for On-Duty (OD) Attendance sheet processing.'}
               </p>
 
               {/* Verified Student Summary Card */}
