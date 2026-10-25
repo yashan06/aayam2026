@@ -153,6 +153,7 @@ export default function AdminOdSheet() {
   const [dataCollectionMode, setDataCollectionMode] = useState('off');
   const [togglingMode, setTogglingMode] = useState(false);
   const [loadingVolunteers, setLoadingVolunteers] = useState(false);
+  const [hasCopiedLink, setHasCopiedLink] = useState(false);
 
   // Add / Edit Volunteer Modal (in Master list)
   const [showVolunteerModal, setShowVolunteerModal] = useState(false);
@@ -265,6 +266,8 @@ export default function AdminOdSheet() {
     const url = window.location.origin + '/volunteer-form';
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(() => {
+        setHasCopiedLink(true);
+        setTimeout(() => setHasCopiedLink(false), 2400);
         showToast('Volunteer registration form link copied to clipboard!', 'success');
       }).catch(() => {
         showToast('Form Link: ' + url, 'info');
@@ -721,6 +724,11 @@ export default function AdminOdSheet() {
           print-color-adjust: exact;
           font-weight: 700;
         }
+        @keyframes pulseDot {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
       `}</style>
 
       {/* TOAST NOTIFICATION */}
@@ -818,168 +826,282 @@ export default function AdminOdSheet() {
       {/* VOLUNTEER DATA COLLECTION MODE CONTROL CARD */}
       {/* ======================================================== */}
       <div className="noprint" style={{
-        background: dataCollectionMode === 'on'
-          ? 'linear-gradient(135deg, rgba(20, 83, 45, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)'
-          : 'linear-gradient(135deg, rgba(127, 29, 29, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)',
-        border: dataCollectionMode === 'on'
-          ? '1.5px solid rgba(34, 197, 94, 0.5)'
-          : '1.5px solid rgba(239, 68, 68, 0.5)',
-        borderRadius: '16px',
-        padding: '20px 24px',
-        marginBottom: '24px',
+        background: '#ffffff',
+        border: dataCollectionMode === 'on' ? '1.5px solid #86efac' : '1.5px solid #e2d9cc',
+        borderRadius: '18px',
+        padding: '0',
+        marginBottom: '26px',
         boxShadow: dataCollectionMode === 'on'
-          ? '0 10px 30px rgba(34, 197, 94, 0.12)'
-          : '0 10px 30px rgba(239, 68, 68, 0.12)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '18px'
+          ? '0 10px 32px rgba(34, 197, 94, 0.1), 0 2px 8px rgba(15, 27, 60, 0.04)'
+          : '0 8px 24px rgba(15, 27, 60, 0.05)',
+        overflow: 'hidden',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
-        {/* Left: Mode Status & Description */}
-        <div style={{ flex: '1 1 360px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 12px',
-              borderRadius: '999px',
-              fontSize: '11px',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              background: dataCollectionMode === 'on' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              color: dataCollectionMode === 'on' ? '#4ade80' : '#f87171',
-              border: dataCollectionMode === 'on' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)'
-            }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: dataCollectionMode === 'on' ? '#22c55e' : '#ef4444',
-                display: 'inline-block',
-                boxShadow: dataCollectionMode === 'on' ? '0 0 10px #22c55e' : 'none'
-              }}></span>
-              {dataCollectionMode === 'on' ? 'Data Mode: ON (Active Registration)' : 'Data Mode: OFF (Portal Locked)'}
-            </span>
-            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
-              • {masterVolunteers.length} registered in Database
-            </span>
+        {/* Top Accent Strip */}
+        <div style={{
+          height: '5px',
+          width: '100%',
+          background: dataCollectionMode === 'on'
+            ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #4ade80 100%)'
+            : 'linear-gradient(90deg, #94a3b8 0%, #cbd5e1 100%)',
+          transition: 'all 0.3s ease'
+        }}></div>
+
+        <div style={{ padding: '24px 28px' }}>
+          
+          {/* Main Top Row: Left Status & Right Master Switch */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+            
+            {/* Left Column: Title, Live Status Badge & Info */}
+            <div style={{ flex: '1 1 420px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                {/* Status Pill */}
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  background: dataCollectionMode === 'on' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.1)',
+                  color: dataCollectionMode === 'on' ? '#15803d' : '#b91c1c',
+                  border: dataCollectionMode === 'on' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.25)'
+                }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: dataCollectionMode === 'on' ? '#22c55e' : '#ef4444',
+                    display: 'inline-block',
+                    boxShadow: dataCollectionMode === 'on' ? '0 0 10px #22c55e' : 'none'
+                  }}></span>
+                  {dataCollectionMode === 'on' ? 'Data Mode: ACTIVE (Open)' : 'Data Mode: OFF (Closed)'}
+                </span>
+
+                {/* Database count badge */}
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 12px',
+                  borderRadius: '999px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  background: '#f8fafc',
+                  color: 'var(--navy)',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  👥 <strong>{masterVolunteers.length}</strong> Master Volunteers
+                </span>
+              </div>
+
+              <h3 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 800, color: 'var(--navy)', fontFamily: "'Playfair Display', serif" }}>
+                Volunteer Data Collection Portal
+              </h3>
+
+              <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--text-mid)', lineHeight: 1.6, maxWidth: '640px' }}>
+                {dataCollectionMode === 'on'
+                  ? '🟢 The registration form is actively open. Students can submit their name, KU ID, semester, department, phone, and email. All submitted records automatically sync into this Master Database and appear in your OD Attendance Sheet generator.'
+                  : '🔴 The registration form is currently locked to students. Turn this ON when announcing volunteer recruitment or event duty registration for UIT students.'}
+              </p>
+            </div>
+
+            {/* Right Column: Master Interactive Toggle Switch & Action Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: dataCollectionMode === 'on' ? '#15803d' : '#64748b' }}>
+                  {dataCollectionMode === 'on' ? 'REGISTRATION LIVE' : 'REGISTRATION PAUSED'}
+                </span>
+
+                {/* Physical iOS-style Toggle Switch */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleToggleDataMode}
+                  title={dataCollectionMode === 'on' ? 'Click to turn registration OFF' : 'Click to turn registration ON'}
+                  style={{
+                    width: '64px',
+                    height: '34px',
+                    borderRadius: '999px',
+                    background: dataCollectionMode === 'on'
+                      ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                      : '#cbd5e1',
+                    padding: '3px',
+                    cursor: togglingMode ? 'wait' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    boxShadow: dataCollectionMode === 'on'
+                      ? '0 4px 14px rgba(34, 197, 94, 0.4)'
+                      : 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    userSelect: 'none'
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                    transform: dataCollectionMode === 'on' ? 'translateX(30px)' : 'translateX(0px)',
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: dataCollectionMode === 'on' ? '#16a34a' : '#94a3b8'
+                  }}>
+                    {togglingMode ? '…' : dataCollectionMode === 'on' ? '✓' : '✕'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Master Button */}
+              <button
+                type="button"
+                onClick={handleToggleDataMode}
+                disabled={togglingMode}
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: '10px',
+                  border: dataCollectionMode === 'on' ? '1.5px solid #fecaca' : '1.5px solid #86efac',
+                  background: dataCollectionMode === 'on' ? '#fef2f2' : '#f0fdf4',
+                  color: dataCollectionMode === 'on' ? '#b91c1c' : '#15803d',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  letterSpacing: '0.03em',
+                  textTransform: 'uppercase',
+                  cursor: togglingMode ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {togglingMode
+                  ? 'Updating...'
+                  : dataCollectionMode === 'on'
+                  ? 'Lock Registration Form 🔒'
+                  : 'Open Registration Form 🟢'}
+              </button>
+            </div>
+
           </div>
 
-          <h3 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
-            Volunteer Data Collection Mode
-          </h3>
-          <p style={{ margin: 0, fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5 }}>
-            {dataCollectionMode === 'on'
-              ? '🟢 Students can access the Volunteer Form and submit their details. Newly submitted records appear instantly in your Master Volunteers list and OD Sheet generator.'
-              : '🔴 The public registration form is currently locked for students. Click "Turn ON Data Mode" below when you want to collect volunteer responses.'}
-          </p>
-        </div>
+          {/* Quick Share Link Container */}
+          <div style={{
+            background: 'var(--cream)',
+            border: '1.5px solid var(--border)',
+            borderRadius: '14px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 300px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap' }}>
+                🔗 Volunteer Portal URL:
+              </span>
+              <code style={{
+                background: '#ffffff',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #dfd7cc',
+                fontSize: '12.5px',
+                color: 'var(--gold)',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '380px'
+              }}>
+                {window.location.origin}/volunteer-form
+              </code>
+            </div>
 
-        {/* Right: Actions (Copy Link + Open Form + Sync + Toggle Button) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={copyVolunteerFormLink}
-            style={{
-              padding: '9px 15px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-            title="Copy public link to student volunteer registration form"
-          >
-            📋 Copy Form Link
-          </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Copy Link Button */}
+              <button
+                type="button"
+                onClick={copyVolunteerFormLink}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: hasCopiedLink ? '#15803d' : '#ffffff',
+                  color: hasCopiedLink ? '#ffffff' : 'var(--navy)',
+                  border: hasCopiedLink ? '1.5px solid #15803d' : '1.5px solid var(--border)',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+                }}
+              >
+                {hasCopiedLink ? '✓ Copied to Clipboard!' : '📋 Copy Form Link'}
+              </button>
 
-          <a
-            href="/volunteer-form"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              padding: '9px 15px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#93c5fd',
-              fontSize: '13px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-            title="Preview student volunteer registration form in a new tab"
-          >
-            🔗 Open Form ↗
-          </a>
+              {/* Open Form */}
+              <a
+                href="/volunteer-form"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: '#0369a1',
+                  border: '1.5px solid #bae6fd',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+                }}
+              >
+                ↗️ Preview Form
+              </a>
 
-          <button
-            type="button"
-            onClick={fetchVolunteersFromApi}
-            disabled={loadingVolunteers}
-            style={{
-              padding: '9px 14px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: loadingVolunteers ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-            title="Refresh volunteer list from server database"
-          >
-            🔄 {loadingVolunteers ? 'Syncing...' : 'Sync Data'}
-          </button>
+              {/* Sync Volunteers */}
+              <button
+                type="button"
+                onClick={fetchVolunteersFromApi}
+                disabled={loadingVolunteers}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: 'var(--navy)',
+                  border: '1.5px solid var(--border)',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  cursor: loadingVolunteers ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Refresh volunteer directory from database"
+              >
+                🔄 {loadingVolunteers ? 'Syncing...' : 'Sync Database'}
+              </button>
+            </div>
+          </div>
 
-          {/* Toggle Button */}
-          <button
-            type="button"
-            onClick={handleToggleDataMode}
-            disabled={togglingMode}
-            style={{
-              padding: '11px 22px',
-              borderRadius: '12px',
-              border: 'none',
-              cursor: togglingMode ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 800,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s ease',
-              background: dataCollectionMode === 'on'
-                ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'
-                : 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)',
-              color: '#ffffff',
-              boxShadow: dataCollectionMode === 'on'
-                ? '0 4px 16px rgba(239, 68, 68, 0.45)'
-                : '0 4px 16px rgba(34, 197, 94, 0.45)'
-            }}
-          >
-            {togglingMode ? (
-              'Updating Mode...'
-            ) : dataCollectionMode === 'on' ? (
-              'Turn OFF Data Mode 🔒'
-            ) : (
-              'Turn ON Data Mode 🟢'
-            )}
-          </button>
         </div>
       </div>
 
