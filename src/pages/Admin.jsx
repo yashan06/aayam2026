@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import EventDetailsForm from '../components/EventDetailsForm';
+import AdminOdSheet from '../components/AdminOdSheet';
 
 export default function Admin() {
   const { user, login, logout } = useAuth();
@@ -615,13 +616,15 @@ export default function Admin() {
         </div>
 
         {/* TABS NAVIGATION */}
-        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '8px', display: 'flex', gap: '8px', border: '1px solid #e8e0d0', marginBottom: '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '8px', display: 'flex', gap: '8px', border: '1px solid #e8e0d0', marginBottom: '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', flexWrap: 'wrap' }}>
           {[
-            { id: 'messages', label: '📩 Contact Messages', count: messages.length },
-            { id: 'registrations', label: '🎟️ Event Registrations', count: registrations.length },
-            { id: 'events', label: '📅 Manage Events', count: eventsList.length },
-            { id: 'team', label: '👥 Manage Team', count: teamList.length },
-            { id: 'gallery', label: '🖼️ Manage Gallery', count: galleryList.length }
+            { id: 'messages', label: '📩 Inquiries', count: messages.length },
+            { id: 'registrations', label: '🎟️ Registrations', count: registrations.length },
+            { id: 'events', label: '📅 Events', count: eventsList.length },
+            { id: 'team', label: '👥 Team', count: teamList.length },
+            { id: 'gallery', label: '🖼️ Gallery', count: galleryList.length },
+            { id: 'moments', label: '✨ Moments', count: momentsList.length },
+            { id: 'od_sheet', label: '📄 OD Sheet Generator', count: 'Auto' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -1236,6 +1239,11 @@ export default function Admin() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* OD SHEET GENERATOR TAB PANEL */}
+        {activeTab === 'od_sheet' && (
+          <AdminOdSheet />
         )}
       </main>
 
