@@ -12,8 +12,21 @@ const TEAM_SECTIONS = [
 ];
 
 export default function Team() {
-  const [teamList, setTeamList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [teamList, setTeamList] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('aayam_team_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('aayam_team_cache');
+    } catch {
+      return true;
+    }
+  });
   const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
@@ -21,12 +34,14 @@ export default function Team() {
   }, []);
 
   const fetchTeam = async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`/api/team?_t=${Date.now()}`);
+      const res = await fetch('/api/team');
       const data = await res.json();
-      if (data.success) {
-        setTeamList(data.team || []);
+      if (data.success && Array.isArray(data.team)) {
+        setTeamList(data.team);
+        try {
+          sessionStorage.setItem('aayam_team_cache', JSON.stringify(data.team));
+        } catch {}
       }
     } catch (err) {
       console.error('Error fetching team members:', err);

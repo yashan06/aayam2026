@@ -73,8 +73,8 @@ const DEFAULT_EVENTS = [
 
 export default function Events() {
   const [filter, setFilter] = useState('all');
-  const [eventsList, setEventsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [eventsList, setEventsList] = useState(DEFAULT_EVENTS);
+  const [loading, setLoading] = useState(false);
   const [modalState, setModalState] = useState({ isOpen: false, eventId: 1, eventTitle: '' });
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -83,11 +83,10 @@ export default function Events() {
   }, []);
 
   const fetchEvents = async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`/api/events?_t=${Date.now()}`);
+      const res = await fetch('/api/events');
       const data = await res.json();
-      if (data.success && Array.isArray(data.events)) {
+      if (data.success && Array.isArray(data.events) && data.events.length > 0) {
         setEventsList(data.events);
       }
     } catch (err) {

@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Gallery() {
-  const [galleryItems, setGalleryItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [galleryItems, setGalleryItems] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('aayam_gallery_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('aayam_gallery_cache');
+    } catch {
+      return true;
+    }
+  });
   const [activeCategory, setActiveCategory] = useState('All');
   const [lightbox, setLightbox] = useState({ isOpen: false, imgSrc: '', title: '', category: '' });
 
@@ -11,12 +24,14 @@ export default function Gallery() {
   }, []);
 
   const fetchGallery = async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`/api/gallery?_t=${Date.now()}`);
+      const res = await fetch('/api/gallery');
       const data = await res.json();
       if (data.success && Array.isArray(data.images)) {
         setGalleryItems(data.images);
+        try {
+          sessionStorage.setItem('aayam_gallery_cache', JSON.stringify(data.images));
+        } catch {}
       }
     } catch (err) {
       console.error('Error fetching gallery:', err);

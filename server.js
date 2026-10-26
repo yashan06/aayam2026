@@ -15,21 +15,53 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Disable browser caching on API endpoints so updates, edits, deletes & creations appear instantly
+// Lightweight, High-Performance In-Memory API Cache
+const apiCache = new Map();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+const getCached = (key) => {
+  const item = apiCache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.expiry) {
+    apiCache.delete(key);
+    return null;
+  }
+  return item.data;
+};
+
+const setCached = (key, data, ttlMs = CACHE_TTL_MS) => {
+  apiCache.set(key, { data, expiry: Date.now() + ttlMs });
+};
+
+const clearCachePrefix = (prefix) => {
+  for (const key of apiCache.keys()) {
+    if (key.startsWith(prefix)) {
+      apiCache.delete(key);
+    }
+  }
+};
+
+// HTTP Cache headers:
+// - Auth, Admin & Mutations: strictly no-store
+// - Public read-only GET endpoints: fast edge & browser caching with stale-while-revalidate
 app.use('/api', (req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  if (req.method !== 'GET' || req.path.startsWith('/admin') || req.path.startsWith('/auth')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
+  }
   next();
 });
 
-// Serve static frontend assets & React build
+// Serve static frontend assets & React build with aggressive browser caching
 const fs = require('fs');
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, { maxAge: '7d', immutable: true }));
 }
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { maxAge: '1d' }));
 
 // ---- AUTH MIDDLEWARE ----
 const authMiddleware = (req, res, next) => {
@@ -350,6 +382,10 @@ app.post('/api/contact', async (req, res) => {
 app.get('/api/events', async (req, res) => {
   try {
     const { category, status } = req.query;
+    const cacheKey = `events_${category || 'all'}_${status || 'all'}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
     let query = 'SELECT * FROM events WHERE 1=1';
     const params = [];
 
@@ -364,8 +400,9 @@ app.get('/api/events', async (req, res) => {
 
     query += ' ORDER BY id DESC';
     const events = await dbAll(query, params);
-
-    res.json({ success: true, count: events.length, events });
+    const result = { success: true, count: events.length, events };
+    setCached(cacheKey, result);
+    res.json(result);
   } catch (err) {
     console.error('Error fetching events:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch events.' });
@@ -568,6 +605,7 @@ app.post('/api/admin/events', authAdmin, async (req, res) => {
       ]
     );
 
+    clearCachePrefix('events');
     res.status(201).json({ success: true, message: 'Event created successfully.', id: result.lastID });
   } catch (err) {
     console.error('Error creating event:', err);
@@ -613,6 +651,7 @@ app.put('/api/admin/events/:id', authAdmin, async (req, res) => {
       ]
     );
 
+    clearCachePrefix('events');
     res.json({ success: true, message: 'Event updated successfully.' });
   } catch (err) {
     console.error('Error updating event:', err);
@@ -627,6 +666,7 @@ app.patch('/api/admin/events/:id/feature', authAdmin, async (req, res) => {
     await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured'`);
     await dbRun(`UPDATE events SET status = 'featured' WHERE id = ?`, [eventId]);
 
+    clearCachePrefix('events');
     res.json({ success: true, message: 'Event successfully set as Featured Spotlight!' });
   } catch (err) {
     console.error('Error setting featured event:', err);
@@ -637,10 +677,15 @@ app.patch('/api/admin/events/:id/feature', authAdmin, async (req, res) => {
 // Public: Get Team Members
 app.get('/api/team', async (req, res) => {
   try {
+    const cached = getCached('team_all');
+    if (cached) return res.json(cached);
+
     const team = await dbAll(`SELECT * FROM team_members ORDER BY display_order ASC, id ASC`);
     const leadership = team.filter(m => m.category === 'leadership');
     const branches = team.filter(m => m.category === 'branch_head');
-    res.json({ success: true, team, leadership, branches });
+    const result = { success: true, team, leadership, branches };
+    setCached('team_all', result);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch team members.' });
   }
@@ -691,6 +736,7 @@ app.put('/api/admin/team/:id', authAdmin, async (req, res) => {
       [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0, req.params.id]
     );
 
+    clearCachePrefix('team');
     res.json({ success: true, message: 'Team member updated.' });
   } catch (err) {
     console.error('Error updating team member:', err);
@@ -702,6 +748,7 @@ app.put('/api/admin/team/:id', authAdmin, async (req, res) => {
 app.delete('/api/admin/team/:id', authAdmin, async (req, res) => {
   try {
     await dbRun(`DELETE FROM team_members WHERE id = ?`, [req.params.id]);
+    clearCachePrefix('team');
     res.json({ success: true, message: 'Team member deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to delete team member.' });
@@ -711,8 +758,13 @@ app.delete('/api/admin/team/:id', authAdmin, async (req, res) => {
 // Public: Get Gallery Images
 app.get('/api/gallery', async (req, res) => {
   try {
+    const cached = getCached('gallery_all');
+    if (cached) return res.json(cached);
+
     const images = await dbAll(`SELECT * FROM gallery_images ORDER BY display_order ASC, id DESC`);
-    res.json({ success: true, count: images.length, images });
+    const result = { success: true, count: images.length, images };
+    setCached('gallery_all', result);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch gallery images.' });
   }
@@ -741,6 +793,7 @@ app.post('/api/admin/gallery', authAdmin, async (req, res) => {
       [title, category || 'General', image, display_order || 0]
     );
 
+    clearCachePrefix('gallery');
     res.status(201).json({ success: true, message: 'Gallery image added.', id: result.lastID });
   } catch (err) {
     console.error('Error adding gallery image:', err);
@@ -761,6 +814,7 @@ app.put('/api/admin/gallery/:id', authAdmin, async (req, res) => {
       [title, category || 'General', image, display_order || 0, req.params.id]
     );
 
+    clearCachePrefix('gallery');
     res.json({ success: true, message: 'Gallery image updated.' });
   } catch (err) {
     console.error('Error updating gallery image:', err);
@@ -772,6 +826,7 @@ app.put('/api/admin/gallery/:id', authAdmin, async (req, res) => {
 app.delete('/api/admin/gallery/:id', authAdmin, async (req, res) => {
   try {
     await dbRun(`DELETE FROM gallery_images WHERE id = ?`, [req.params.id]);
+    clearCachePrefix('gallery');
     res.json({ success: true, message: 'Gallery image deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to delete gallery image.' });
@@ -785,8 +840,13 @@ app.delete('/api/admin/gallery/:id', authAdmin, async (req, res) => {
 // Public: Get Moments Images
 app.get('/api/moments', async (req, res) => {
   try {
+    const cached = getCached('moments_all');
+    if (cached) return res.json(cached);
+
     const images = await dbAll(`SELECT * FROM moments_images ORDER BY display_order ASC, id ASC`);
-    res.json({ success: true, count: images.length, images });
+    const result = { success: true, count: images.length, images };
+    setCached('moments_all', result);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch moments images.' });
   }
@@ -815,6 +875,7 @@ app.post('/api/admin/moments', authAdmin, async (req, res) => {
       [title || 'Moment Image', image, display_order || 0]
     );
 
+    clearCachePrefix('moments');
     res.status(201).json({ success: true, message: 'Moment photo added.', id: result.lastID });
   } catch (err) {
     console.error('Error adding moment photo:', err);
@@ -835,6 +896,7 @@ app.put('/api/admin/moments/:id', authAdmin, async (req, res) => {
       [title || 'Moment Image', image, display_order || 0, req.params.id]
     );
 
+    clearCachePrefix('moments');
     res.json({ success: true, message: 'Moment photo updated.' });
   } catch (err) {
     console.error('Error updating moment photo:', err);
@@ -846,6 +908,7 @@ app.put('/api/admin/moments/:id', authAdmin, async (req, res) => {
 app.delete('/api/admin/moments/:id', authAdmin, async (req, res) => {
   try {
     await dbRun(`DELETE FROM moments_images WHERE id = ?`, [req.params.id]);
+    clearCachePrefix('moments');
     res.json({ success: true, message: 'Moment photo deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to delete moment photo.' });
@@ -856,6 +919,7 @@ app.delete('/api/admin/moments/:id', authAdmin, async (req, res) => {
 app.delete('/api/admin/events/:id', authAdmin, async (req, res) => {
   try {
     await dbRun(`DELETE FROM events WHERE id = ?`, [req.params.id]);
+    clearCachePrefix('events');
     res.json({ success: true, message: 'Event deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to delete event.' });
@@ -869,9 +933,14 @@ app.delete('/api/admin/events/:id', authAdmin, async (req, res) => {
 // 1. Get Volunteer Data Collection Mode (Public)
 app.get('/api/volunteer-mode', async (req, res) => {
   try {
+    const cached = getCached('volunteer_mode');
+    if (cached) return res.json(cached);
+
     const row = await dbGet(`SELECT value FROM system_settings WHERE key = 'volunteer_collection_mode'`);
     const mode = row ? row.value : 'off';
-    res.json({ success: true, mode });
+    const result = { success: true, mode };
+    setCached('volunteer_mode', result);
+    res.json(result);
   } catch (err) {
     console.error('Error fetching volunteer mode:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch volunteer data mode.' });
@@ -892,6 +961,7 @@ app.post('/api/admin/volunteer-mode', authAdmin, async (req, res) => {
       [mode, mode]
     );
 
+    clearCachePrefix('volunteer_mode');
     res.json({
       success: true,
       mode,
@@ -906,8 +976,13 @@ app.post('/api/admin/volunteer-mode', authAdmin, async (req, res) => {
 // 3. Get Master Volunteers List (Public / Admin for OD Sheet generator)
 app.get('/api/volunteers', async (req, res) => {
   try {
+    const cached = getCached('volunteers_all');
+    if (cached) return res.json(cached);
+
     const volunteers = await dbAll(`SELECT * FROM volunteers ORDER BY name ASC`);
-    res.json({ success: true, volunteers });
+    const result = { success: true, volunteers };
+    setCached('volunteers_all', result);
+    res.json(result);
   } catch (err) {
     console.error('Error fetching volunteers:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch volunteers.' });
@@ -1018,6 +1093,7 @@ app.post('/api/volunteers', async (req, res) => {
         [cleanName, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existingByQid.id]
       );
 
+      clearCachePrefix('volunteers');
       return res.json({
         success: true,
         is_update: true,
@@ -1032,6 +1108,7 @@ app.post('/api/volunteers', async (req, res) => {
       [cleanName, cleanQid, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
     );
 
+    clearCachePrefix('volunteers');
     return res.status(201).json({
       success: true,
       is_update: false,
@@ -1067,6 +1144,7 @@ app.post('/api/admin/volunteers', authAdmin, async (req, res) => {
         `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
         [cleanName, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existing.id]
       );
+      clearCachePrefix('volunteers');
       return res.json({ success: true, message: 'Volunteer updated successfully.', id: existing.id });
     }
 
@@ -1075,6 +1153,7 @@ app.post('/api/admin/volunteers', authAdmin, async (req, res) => {
       [cleanName, cleanQid, cleanSem, cleanCls, cleanCat, cleanPhone, cleanEmail]
     );
 
+    clearCachePrefix('volunteers');
     res.status(201).json({ success: true, message: 'Volunteer added successfully.', id: result.lastID });
   } catch (err) {
     console.error('Error adding volunteer:', err);
@@ -1095,6 +1174,7 @@ app.put('/api/admin/volunteers/:id', authAdmin, async (req, res) => {
       [name.trim(), qid.trim().toUpperCase(), parseInt(sem, 10) || 1, cls.trim(), (cat || 'Management').trim(), (phone || '').trim(), (email || '').trim().toLowerCase(), req.params.id]
     );
 
+    clearCachePrefix('volunteers');
     res.json({ success: true, message: 'Volunteer updated successfully.' });
   } catch (err) {
     console.error('Error updating volunteer:', err);
@@ -1106,6 +1186,7 @@ app.put('/api/admin/volunteers/:id', authAdmin, async (req, res) => {
 app.delete('/api/admin/volunteers/:id', authAdmin, async (req, res) => {
   try {
     await dbRun(`DELETE FROM volunteers WHERE id = ?`, [req.params.id]);
+    clearCachePrefix('volunteers');
     res.json({ success: true, message: 'Volunteer removed.' });
   } catch (err) {
     console.error('Error deleting volunteer:', err);

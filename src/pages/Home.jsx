@@ -32,10 +32,12 @@ const DEFAULT_HOME_EVENTS = [
 ];
 
 export default function Home() {
-  const [homeEvents, setHomeEvents] = useState([]);
+  const [homeEvents, setHomeEvents] = useState(DEFAULT_HOME_EVENTS);
+  const [momentsList, setMomentsList] = useState([]);
 
   useEffect(() => {
     fetchHomeEvents();
+    fetchMoments();
 
     // Scroll animations
     const observerOptions = { threshold: 0.12, rootMargin: '0px 0px -40px 0px' };
@@ -91,18 +93,11 @@ export default function Home() {
     };
   }, []);
 
-  const [momentsList, setMomentsList] = useState([]);
-
-  useEffect(() => {
-    fetchHomeEvents();
-    fetchMoments();
-  }, []);
-
   const fetchHomeEvents = async () => {
     try {
-      const res = await fetch(`/api/events?_t=${Date.now()}`);
+      const res = await fetch('/api/events');
       const data = await res.json();
-      if (data.success && Array.isArray(data.events)) {
+      if (data.success && Array.isArray(data.events) && data.events.length > 0) {
         setHomeEvents(data.events.slice(0, 3));
       }
     } catch (err) {
@@ -112,9 +107,9 @@ export default function Home() {
 
   const fetchMoments = async () => {
     try {
-      const res = await fetch(`/api/moments?_t=${Date.now()}`);
+      const res = await fetch('/api/moments');
       const data = await res.json();
-      if (data.success && Array.isArray(data.images)) {
+      if (data.success && Array.isArray(data.images) && data.images.length > 0) {
         setMomentsList(data.images);
       }
     } catch (err) {
