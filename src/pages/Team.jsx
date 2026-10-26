@@ -11,22 +11,12 @@ const TEAM_SECTIONS = [
   { id: 'Hospitality Team', title: 'Hospitality Team', subtitle: 'GUEST WELCOME, RECEPTION & VIP MANAGEMENT' }
 ];
 
+// In-memory cache for instant navigation without loading delays
+let cachedTeamList = null;
+
 export default function Team() {
-  const [teamList, setTeamList] = useState(() => {
-    try {
-      const cached = sessionStorage.getItem('aayam_team_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      return !sessionStorage.getItem('aayam_team_cache');
-    } catch {
-      return true;
-    }
-  });
+  const [teamList, setTeamList] = useState(() => cachedTeamList || []);
+  const [loading, setLoading] = useState(() => !cachedTeamList);
   const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
@@ -35,13 +25,11 @@ export default function Team() {
 
   const fetchTeam = async () => {
     try {
-      const res = await fetch('/api/team');
+      const res = await fetch(`/api/team?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.team)) {
+        cachedTeamList = data.team;
         setTeamList(data.team);
-        try {
-          sessionStorage.setItem('aayam_team_cache', JSON.stringify(data.team));
-        } catch {}
       }
     } catch (err) {
       console.error('Error fetching team members:', err);
@@ -365,87 +353,96 @@ export default function Team() {
                           </p>
                         )}
                         {/* LINKEDIN, INSTAGRAM & EMAIL SOCIAL LINKS */}
-                        <div
-                          style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 'auto' }}
-                          onClick={(e) => e.stopPropagation()} // Prevent card popup if clicking links directly
-                        >
-                          {/* LinkedIn Link */}
-                          <a
-                            href={item.linkedin_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(item.name)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`LinkedIn Profile of ${item.name}`}
-                            className="social-link-btn"
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '8px',
-                              background: '#f4ede2',
-                              color: 'var(--navy)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justify: 'center',
-                              textDecoration: 'none',
-                              border: '1px solid #e2d7c5'
-                            }}
+                        {(Boolean(item.linkedin_url && item.linkedin_url.trim()) ||
+                          Boolean(item.instagram_url && item.instagram_url.trim()) ||
+                          Boolean(item.email && item.email.trim())) && (
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 'auto' }}
+                            onClick={(e) => e.stopPropagation()} // Prevent card popup if clicking links directly
                           >
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-                            </svg>
-                          </a>
+                            {/* LinkedIn Link */}
+                            {Boolean(item.linkedin_url && item.linkedin_url.trim()) && (
+                              <a
+                                href={item.linkedin_url.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`LinkedIn Profile of ${item.name}`}
+                                className="social-link-btn"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '8px',
+                                  background: '#f4ede2',
+                                  color: 'var(--navy)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  textDecoration: 'none',
+                                  border: '1px solid #e2d7c5'
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                                </svg>
+                              </a>
+                            )}
 
-                          {/* Instagram Link */}
-                          <a
-                            href={item.instagram_url || 'https://www.instagram.com/uit_students_committee'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Instagram Profile of ${item.name}`}
-                            className="social-link-btn"
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '8px',
-                              background: '#f4ede2',
-                              color: '#d62976',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justify: 'center',
-                              textDecoration: 'none',
-                              border: '1px solid #e2d7c5'
-                            }}
-                          >
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                            </svg>
-                          </a>
+                            {/* Instagram Link */}
+                            {Boolean(item.instagram_url && item.instagram_url.trim()) && (
+                              <a
+                                href={item.instagram_url.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Instagram Profile of ${item.name}`}
+                                className="social-link-btn"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '8px',
+                                  background: '#f4ede2',
+                                  color: '#d62976',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  textDecoration: 'none',
+                                  border: '1px solid #e2d7c5'
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                                </svg>
+                              </a>
+                            )}
 
-                          {/* Email Link */}
-                          <a
-                            href={`mailto:${item.email || 'aayam@ku.edu.in'}`}
-                            aria-label={`Send email to ${item.name}`}
-                            className="social-link-btn"
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '8px',
-                              background: '#f4ede2',
-                              color: 'var(--navy)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justify: 'center',
-                              textDecoration: 'none',
-                              border: '1px solid #e2d7c5'
-                            }}
-                          >
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                              <polyline points="22,6 12,13 2,6"/>
-                            </svg>
-                          </a>
-
-                        </div>
+                            {/* Email Link */}
+                            {Boolean(item.email && item.email.trim()) && (
+                              <a
+                                href={`mailto:${item.email.trim()}`}
+                                aria-label={`Send email to ${item.name}`}
+                                className="social-link-btn"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '8px',
+                                  background: '#f4ede2',
+                                  color: 'var(--navy)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  textDecoration: 'none',
+                                  border: '1px solid #e2d7c5'
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                  <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                              </a>
+                            )}
+                          </div>
+                        )}
 
                       </div>
                     ))}
@@ -603,175 +600,187 @@ export default function Team() {
             )}
 
             {/* CONNECT & CONTACT SECTION (HIGH-END UI/UX & PERFECT ALIGNMENT) */}
-            <div style={{ marginTop: '18px', marginBottom: '22px' }}>
-              {/* Divider Heading */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                marginBottom: '14px'
-              }}>
-                <div style={{ flex: 1, height: '1px', background: '#e2d7c5' }} />
-                <span style={{
-                  fontSize: '10.5px',
-                  fontWeight: 800,
-                  letterSpacing: '1.8px',
-                  color: '#C5A059',
-                  textTransform: 'uppercase'
-                }}>
-                  Get In Touch
-                </span>
-                <div style={{ flex: 1, height: '1px', background: '#e2d7c5' }} />
-              </div>
-
-              {/* 1. Official Email Card (Clean Horizontal Alignment & Proper Text Fit) */}
-              <a
-                href={'mailto:' + (selectedMember.email || 'aayam@ku.edu.in')}
-                aria-label={'Send email to ' + selectedMember.name}
-                className="contact-action-card email-card"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  background: '#ffffff',
-                  borderRadius: '14px',
-                  border: '1.5px solid #e8dfd1',
-                  textDecoration: 'none',
-                  marginBottom: '12px',
-                  boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                  <div style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '10px',
-                    background: '#fbf6ee',
-                    border: '1px solid #eadbc2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#C5A059',
-                    flexShrink: 0
-                  }}>
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                  </div>
-                  <div style={{ textAlign: 'left', minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      letterSpacing: '1px',
-                      color: '#8c734b',
-                      textTransform: 'uppercase',
-                      marginBottom: '2px'
-                    }}>
-                      Official Email
-                    </div>
-                    <div style={{
-                      fontSize: '13.5px',
-                      fontWeight: 700,
-                      color: 'var(--navy)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {selectedMember.email || 'aayam@ku.edu.in'}
-                    </div>
-                  </div>
-                </div>
-
+            {(Boolean(selectedMember.email && selectedMember.email.trim()) ||
+              Boolean(selectedMember.linkedin_url && selectedMember.linkedin_url.trim()) ||
+              Boolean(selectedMember.instagram_url && selectedMember.instagram_url.trim())) && (
+              <div style={{ marginTop: '18px', marginBottom: '22px' }}>
+                {/* Divider Heading */}
                 <div style={{
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  background: 'var(--navy)',
-                  color: '#ffffff',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.4px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  flexShrink: 0,
-                  marginLeft: '8px'
+                  justifyContent: 'center',
+                  gap: '12px',
+                  marginBottom: '14px'
                 }}>
-                  Mail ↗
+                  <div style={{ flex: 1, height: '1px', background: '#e2d7c5' }} />
+                  <span style={{
+                    fontSize: '10.5px',
+                    fontWeight: 800,
+                    letterSpacing: '1.8px',
+                    color: '#C5A059',
+                    textTransform: 'uppercase'
+                  }}>
+                    Get In Touch
+                  </span>
+                  <div style={{ flex: 1, height: '1px', background: '#e2d7c5' }} />
                 </div>
-              </a>
 
-              {/* 2. Symmetrical LinkedIn & Instagram Grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '10px'
-              }}>
-                {/* LinkedIn Button */}
-                <a
-                  href={selectedMember.linkedin_url || ('https://www.linkedin.com/search/results/all/?keywords=' + encodeURIComponent(selectedMember.name))}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={'LinkedIn Profile of ' + selectedMember.name}
-                  className="contact-action-card linkedin-card"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    background: '#ffffff',
-                    border: '1.5px solid #d4dfec',
-                    color: '#0a66c2',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-                  </svg>
-                  <span>LinkedIn</span>
-                  <span style={{ fontSize: '11px', opacity: 0.7 }}>↗</span>
-                </a>
+                {/* 1. Official Email Card (Only if email is provided) */}
+                {Boolean(selectedMember.email && selectedMember.email.trim()) && (
+                  <a
+                    href={'mailto:' + selectedMember.email.trim()}
+                    aria-label={'Send email to ' + selectedMember.name}
+                    className="contact-action-card email-card"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#ffffff',
+                      borderRadius: '14px',
+                      border: '1.5px solid #e8dfd1',
+                      textDecoration: 'none',
+                      marginBottom: (Boolean(selectedMember.linkedin_url && selectedMember.linkedin_url.trim()) || Boolean(selectedMember.instagram_url && selectedMember.instagram_url.trim())) ? '12px' : '0',
+                      boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                      <div style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '10px',
+                        background: '#fbf6ee',
+                        border: '1px solid #eadbc2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#C5A059',
+                        flexShrink: 0
+                      }}>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                          <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                      </div>
+                      <div style={{ textAlign: 'left', minWidth: 0 }}>
+                        <div style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          letterSpacing: '1px',
+                          color: '#8c734b',
+                          textTransform: 'uppercase',
+                          marginBottom: '2px'
+                        }}>
+                          Official Email
+                        </div>
+                        <div style={{
+                          fontSize: '13.5px',
+                          fontWeight: 700,
+                          color: 'var(--navy)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {selectedMember.email.trim()}
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Instagram Button */}
-                <a
-                  href={selectedMember.instagram_url || 'https://www.instagram.com/uit_students_committee'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={'Instagram Profile of ' + selectedMember.name}
-                  className="contact-action-card instagram-card"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    background: '#ffffff',
-                    border: '1.5px solid #f2dbe0',
-                    color: '#d62976',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                  </svg>
-                  <span>Instagram</span>
-                  <span style={{ fontSize: '11px', opacity: 0.7 }}>↗</span>
-                </a>
+                    <div style={{
+                      padding: '6px 14px',
+                      borderRadius: '20px',
+                      background: 'var(--navy)',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '0.4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      flexShrink: 0,
+                      marginLeft: '8px'
+                    }}>
+                      Mail ↗
+                    </div>
+                  </a>
+                )}
+
+                {/* 2. Symmetrical LinkedIn & Instagram Grid */}
+                {(Boolean(selectedMember.linkedin_url && selectedMember.linkedin_url.trim()) || Boolean(selectedMember.instagram_url && selectedMember.instagram_url.trim())) && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: (Boolean(selectedMember.linkedin_url && selectedMember.linkedin_url.trim()) && Boolean(selectedMember.instagram_url && selectedMember.instagram_url.trim())) ? '1fr 1fr' : '1fr',
+                    gap: '10px'
+                  }}>
+                    {/* LinkedIn Button */}
+                    {Boolean(selectedMember.linkedin_url && selectedMember.linkedin_url.trim()) && (
+                      <a
+                        href={selectedMember.linkedin_url.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={'LinkedIn Profile of ' + selectedMember.name}
+                        className="contact-action-card linkedin-card"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          background: '#ffffff',
+                          border: '1.5px solid #d4dfec',
+                          color: '#0a66c2',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                        </svg>
+                        <span>LinkedIn</span>
+                        <span style={{ fontSize: '11px', opacity: 0.7 }}>↗</span>
+                      </a>
+                    )}
+
+                    {/* Instagram Button */}
+                    {Boolean(selectedMember.instagram_url && selectedMember.instagram_url.trim()) && (
+                      <a
+                        href={selectedMember.instagram_url.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={'Instagram Profile of ' + selectedMember.name}
+                        className="contact-action-card instagram-card"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          background: '#ffffff',
+                          border: '1.5px solid #f2dbe0',
+                          color: '#d62976',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          boxShadow: '0 2px 8px rgba(15, 27, 60, 0.04)'
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                        </svg>
+                        <span>Instagram</span>
+                        <span style={{ fontSize: '11px', opacity: 0.7 }}>↗</span>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* SLEEK BOTTOM CLOSE BUTTON */}
             <button

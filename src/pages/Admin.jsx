@@ -156,6 +156,7 @@ export default function Admin() {
 
   const deleteEvent = async (id) => {
     if (!window.confirm('Delete this event?')) return;
+    setEventsList(prev => prev.filter(ev => ev.id !== id));
     await fetch(`/api/admin/events/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     loadEvents();
     loadStats();
@@ -171,6 +172,7 @@ export default function Admin() {
 
   const deleteTeamMember = async (id) => {
     if (!window.confirm('Delete this team member?')) return;
+    setTeamList(prev => prev.filter(m => m.id !== id));
     await fetch(`/api/admin/team/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     loadTeam();
   };
@@ -186,6 +188,8 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowAddTeamMember(false);
+        const created = { ...newTeamMember, id: data.id || Date.now() };
+        setTeamList(prev => [...prev, created]);
         setNewTeamMember({ name: '', role: '', category: 'leadership', branch_title: '', description: '', image: '', icon: '⭐', linkedin_url: '', email: '', instagram_url: '', display_order: 0 });
         loadTeam();
       } else {
@@ -207,6 +211,8 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) {
+        const updated = { ...editingTeamMember };
+        setTeamList(prev => prev.map(m => m.id === updated.id ? updated : m));
         setEditingTeamMember(null);
         loadTeam();
       } else {
@@ -235,12 +241,14 @@ export default function Admin() {
 
   const deleteGalleryItem = async (id) => {
     if (!window.confirm('Delete this gallery photo?')) return;
+    setGalleryList(prev => prev.filter(g => g.id !== id));
     await fetch(`/api/admin/gallery/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     loadGallery();
   };
 
   const deleteMomentItem = async (id) => {
     if (!window.confirm('Delete this moment photo?')) return;
+    setMomentsList(prev => prev.filter(m => m.id !== id));
     await fetch(`/api/admin/moments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     loadMoments();
   };
@@ -256,6 +264,8 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowAddMomentModal(false);
+        const created = { ...newMomentItem, id: data.id || Date.now() };
+        setMomentsList(prev => [...prev, created]);
         setNewMomentItem({ title: '', image: '', display_order: 0 });
         loadMoments();
       } else {
@@ -277,6 +287,8 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) {
+        const updated = { ...editingMomentItem };
+        setMomentsList(prev => prev.map(m => m.id === updated.id ? updated : m));
         setEditingMomentItem(null);
         loadMoments();
       } else {
@@ -298,6 +310,8 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowAddGalleryModal(false);
+        const created = { ...newGalleryItem, id: data.id || Date.now() };
+        setGalleryList(prev => [...prev, created]);
         setNewGalleryItem({ title: '', category: 'Technical', image: '', display_order: 0 });
         loadGallery();
       } else {
@@ -319,6 +333,8 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) {
+        const updated = { ...editingGalleryItem };
+        setGalleryList(prev => prev.map(g => g.id === updated.id ? updated : g));
         setEditingGalleryItem(null);
         loadGallery();
       } else {
@@ -415,6 +431,8 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowAddEvent(false);
+        const created = { ...newEvent, id: data.id || Date.now() };
+        setEventsList(prev => [created, ...prev]);
         setNewEvent({ title: '', category: 'technical', date_str: '', location: '', description: '', status: 'upcoming' });
         loadEvents();
         loadStats();
@@ -437,6 +455,8 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) {
+        const updated = { ...editingEvent };
+        setEventsList(prev => prev.map(ev => ev.id === updated.id ? updated : ev));
         setEditingEvent(null);
         loadEvents();
         loadStats();

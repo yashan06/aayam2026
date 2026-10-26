@@ -3,18 +3,18 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// Eager load Home for instant initial page render
+// Eager load core user-facing pages for instant navigation without route-transition spinners
 import Home from './pages/Home';
+import Team from './pages/Team';
+import Events from './pages/Events';
+import Gallery from './pages/Gallery';
+import Contact from './pages/Contact';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import VolunteerForm from './pages/VolunteerForm';
 
-// Lazy load secondary pages to dramatically reduce initial bundle size & load time
-const Events = lazy(() => import('./pages/Events'));
-const Team = lazy(() => import('./pages/Team'));
-const Gallery = lazy(() => import('./pages/Gallery'));
-const Contact = lazy(() => import('./pages/Contact'));
+// Lazy load heavy admin portal only
 const Admin = lazy(() => import('./pages/Admin'));
-const Login = lazy(() => import('./pages/Login'));
-const Signup = lazy(() => import('./pages/Signup'));
-const VolunteerForm = lazy(() => import('./pages/VolunteerForm'));
 
 export default function App() {
   const location = useLocation();

@@ -45,13 +45,9 @@ const clearCachePrefix = (prefix) => {
 // - Auth, Admin & Mutations: strictly no-store
 // - Public read-only GET endpoints: fast edge & browser caching with stale-while-revalidate
 app.use('/api', (req, res, next) => {
-  if (req.method !== 'GET' || req.path.startsWith('/admin') || req.path.startsWith('/auth')) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  } else {
-    res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
-  }
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   next();
 });
 
@@ -715,6 +711,7 @@ app.post('/api/admin/team', authAdmin, async (req, res) => {
       [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0]
     );
 
+    clearCachePrefix('team');
     res.status(201).json({ success: true, message: 'Team member created.', id: result.lastID });
   } catch (err) {
     console.error('Error creating team member:', err);
