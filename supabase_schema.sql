@@ -158,10 +158,11 @@ INSERT INTO public.system_settings (key, value) VALUES
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- 2. Default Admins
--- (admin / adminpassword123 and mehta_admin / password)
+-- (admin / adminpassword123, mehta_admin / password, and yashanoswal05 / yashanoswal05)
 INSERT INTO public.admins (username, email, password_hash, name) VALUES 
 ('admin', 'admin@ku.edu.in', '$2a$10$Oj1VV74rKNcrsOpU/SwFH.a76s35J5bOuNkxr4H40y3QN7mHcpTX2', 'AAYAM Administrator'),
-('mehta_admin', 'mehta@ku.edu.in', '$2a$10$YHze58VlMWb/PhYqVXHSd.GTfDjs2vXuJtUyciSl/5d/6TsUSlmhm', 'Prof. Mehta')
+('mehta_admin', 'mehta@ku.edu.in', '$2a$10$YHze58VlMWb/PhYqVXHSd.GTfDjs2vXuJtUyciSl/5d/6TsUSlmhm', 'Prof. Mehta'),
+('yashanoswal05', 'yashanoswal05@gmail.com', '$2a$10$AuRgCbTt9AueSRAKIFlEkO0xXy4Xh4dH9gC2RFEb2gGNoaYy5XDxW', 'Yashan Oswal')
 ON CONFLICT (username) DO NOTHING;
 
 -- 3. Default Student
