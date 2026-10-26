@@ -116,7 +116,7 @@ app.post('/api/auth/student/signup', async (req, res) => {
     });
   } catch (err) {
     console.error('Error during student signup:', err);
-    res.status(500).json({ success: false, error: 'Failed to create student account.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to create student account.' });
   }
 });
 
@@ -161,7 +161,7 @@ app.post('/api/auth/student/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error during student login:', err);
-    res.status(500).json({ success: false, error: 'Failed to log in.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to log in.' });
   }
 });
 
@@ -208,7 +208,7 @@ app.post('/api/auth/admin/signup', async (req, res) => {
     });
   } catch (err) {
     console.error('Error during admin signup:', err);
-    res.status(500).json({ success: false, error: 'Failed to create admin account.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to create admin account.' });
   }
 });
 
@@ -244,7 +244,7 @@ app.post('/api/auth/admin/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error logging in admin:', err);
-    res.status(500).json({ success: false, error: 'Failed to process login.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to process login.' });
   }
 });
 
@@ -307,7 +307,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(401).json({ success: false, error: 'Invalid Email/Username or Password.' });
   } catch (err) {
     console.error('Error during unified login:', err);
-    res.status(500).json({ success: false, error: 'Failed to process login.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to process login.' });
   }
 });
 

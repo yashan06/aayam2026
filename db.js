@@ -4,12 +4,18 @@ const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 
 // 1. SUPABASE CLIENT INITIALIZATION
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+// Default fallback credentials ensuring 100% instant connectivity on Vercel even if env vars are missing
+const DEFAULT_SUPABASE_URL = 'https://zinczfiuqkniitgrwxin.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppbmN6Zml1cWtuaWl0Z3J3eGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMTkxNDQsImV4cCI6MjEwODU5NTE0NH0.S_4iP7MqrHEDGAS528qD3XSdOcbgGvEQjGp1w_9cn64';
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
 const supabaseKey =
   process.env.SUPABASE_SECRET_KEY ||
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  DEFAULT_SUPABASE_ANON_KEY;
 
 const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 let supabase = null;
@@ -33,8 +39,24 @@ if (!supabase) {
   const sqlite3 = require('sqlite3').verbose();
   const dbPath = isVercel ? path.join('/tmp', 'aayam.db') : path.resolve(__dirname, 'aayam.db');
   sqliteDb = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Error connecting to SQLite database:', err.message);
-    else console.log('Connected to SQLite database at:', dbPath);
+    if (err) {
+      console.error('Error connecting to SQLite database:', err.message);
+    } else {
+      console.log('Connected to SQLite database at:', dbPath);
+      // Auto-create tables in SQLite fallback so queries never crash with no such table
+      sqliteDb.exec(`
+        CREATE TABLE IF NOT EXISTS contact_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, status TEXT DEFAULT 'unread', created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, subtitle TEXT, category TEXT NOT NULL, date_str TEXT, start_date TEXT, end_date TEXT, location TEXT NOT NULL, description TEXT, short_description TEXT, full_description TEXT, about_event TEXT, image TEXT, status TEXT DEFAULT 'upcoming', custom_fields TEXT, visibility TEXT DEFAULT 'public', registration_link TEXT, slideshow_images TEXT, schedule_cards TEXT, sub_events TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS event_registrations (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER, event_title TEXT NOT NULL, student_name TEXT NOT NULL, student_email TEXT NOT NULL, phone TEXT NOT NULL, roll_number TEXT NOT NULL, branch TEXT NOT NULL, year TEXT NOT NULL, custom_responses TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS admins (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT, password_hash TEXT NOT NULL, name TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, roll_number TEXT, branch TEXT, year TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS team_members (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, role TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'Head', branch_title TEXT, description TEXT, image TEXT, icon TEXT, linkedin_url TEXT, email TEXT, instagram_url TEXT, display_order INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS gallery_images (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'General', image TEXT NOT NULL, display_order INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS moments_images (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, image TEXT NOT NULL, display_order INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS volunteers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, qid TEXT UNIQUE NOT NULL, sem TEXT NOT NULL, cls TEXT NOT NULL, cat TEXT NOT NULL, phone TEXT, email TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+      `);
+    }
   });
 }
 
