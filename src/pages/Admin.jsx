@@ -1104,9 +1104,9 @@ export default function Admin() {
                           }}>
                             {/* Avatar */}
                             {m.image ? (
-                              <img src={m.image} alt={m.name} style={{ width: '84px', height: '84px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #C5A059', marginBottom: '10px' }} />
+                              <img src={m.image} alt={m.name} style={{ width: '84px', height: '84px', borderRadius: '12px', objectFit: 'cover', border: '2px solid #C5A059', marginBottom: '10px' }} />
                             ) : (
-                              <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #0f1b3c, #1a2a55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '36px', border: '2px solid #C5A059', marginBottom: '10px' }}>
+                              <div style={{ width: '84px', height: '84px', borderRadius: '12px', background: 'linear-gradient(135deg, #0f1b3c, #1a2a55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '36px', border: '2px solid #C5A059', marginBottom: '10px' }}>
                                 👤
                               </div>
                             )}
@@ -1420,7 +1420,7 @@ export default function Admin() {
 
                   {newTeamMember.image && (
                     <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img src={newTeamMember.image} alt="Preview" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #C5A059' }} />
+                      <img src={newTeamMember.image} alt="Preview" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', border: '2px solid #C5A059' }} />
                       <button type="button" onClick={() => setNewTeamMember({ ...newTeamMember, image: '' })} style={{ padding: '4px 10px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>Remove</button>
                     </div>
                   )}
@@ -1732,7 +1732,7 @@ export default function Admin() {
 
                   {editingTeamMember.image && (
                     <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img src={editingTeamMember.image} alt="Preview" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #C5A059' }} />
+                      <img src={editingTeamMember.image} alt="Preview" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', border: '2px solid #C5A059' }} />
                       <button type="button" onClick={() => setEditingTeamMember({ ...editingTeamMember, image: '' })} style={{ padding: '4px 10px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>Remove</button>
                     </div>
                   )}
