@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatCleanDate } from '../utils/dateFormatter';
 
 export default function EventDetailsModal({ isOpen, onClose, event, onRegister }) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -63,16 +64,7 @@ export default function EventDetailsModal({ isOpen, onClose, event, onRegister }
   })();
 
   // Date range display
-  const formatDateRange = () => {
-    if (event.start_date && event.end_date) {
-      const s = new Date(event.start_date);
-      const e = new Date(event.end_date);
-      const sStr = isNaN(s) ? event.start_date : s.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-      const eStr = isNaN(e) ? event.end_date : e.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-      return `${sStr} ➔ ${eStr}`;
-    }
-    return event.date_str || 'TBA';
-  };
+  const formatDateRange = () => formatCleanDate(event);
 
   return (
     <div style={{

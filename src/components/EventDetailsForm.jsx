@@ -372,6 +372,19 @@ export default function EventDetailsForm({ eventData, setEventData, onSubmit, on
             </div>
           </div>
 
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--gold)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+              CUSTOM DISPLAY DATE <span style={{ textTransform: 'none', fontWeight: 500, color: '#94a3b8' }}>(optional — auto-formatted from start/end date if left blank)</span>
+            </label>
+            <input
+              type="text"
+              value={eventData.date_str || ''}
+              onChange={(e) => setEventData({ ...eventData, date_str: e.target.value })}
+              placeholder="e.g. 29 – 31 Oct 2026 or 18 March 2026"
+              style={{ width: '100%', padding: '12px 16px', border: '1.5px solid #cbd5e1', borderRadius: '12px', fontSize: '13px', background: '#faf8f5' }}
+            />
+          </div>
+
           {/* REGISTRATION LINK */}
           <div>
             <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--gold)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import EventDetailsForm from '../components/EventDetailsForm';
 import AdminOdSheet from '../components/AdminOdSheet';
+import { formatCleanDate } from '../utils/dateFormatter';
 
 export default function Admin() {
   const { user, login, logout } = useAuth();
@@ -978,7 +979,7 @@ export default function Admin() {
                             {ev.subtitle && <div style={{ fontSize: '11px', color: '#64748b' }}>{ev.subtitle}</div>}
                           </td>
                           <td style={{ padding: '14px 16px', textTransform: 'capitalize', fontWeight: 600, color: 'var(--gold)' }}>{ev.category}</td>
-                          <td style={{ padding: '14px 16px', color: '#475569' }}>{ev.date_str || (ev.start_date ? `${ev.start_date} – ${ev.end_date}` : 'TBA')}</td>
+                          <td style={{ padding: '14px 16px', color: '#475569', fontWeight: 600 }}>{formatCleanDate(ev)}</td>
                           <td style={{ padding: '14px 16px', color: '#475569' }}>{ev.location}</td>
                           <td style={{ padding: '14px 16px' }}>
                             <span style={{ padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: isFeatured ? '#fef3c7' : ev.status === 'registering' ? '#dcfce7' : '#f1f5f9', color: isFeatured ? '#92400e' : ev.status === 'registering' ? '#166534' : '#475569', boxShadow: isFeatured ? '0 0 10px rgba(200,146,42,0.3)' : 'none' }}>

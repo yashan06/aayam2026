@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 import EventDetailsView from '../components/EventDetailsView';
+import { formatCleanDate, parseDateBadge } from '../utils/dateFormatter';
 
 const DEFAULT_EVENTS = [
   {
@@ -113,34 +114,7 @@ export default function Events() {
     setDetailsModalState({ isOpen: false, event: null });
   };
 
-  const parseDateBadge = (dateStr, startDateStr) => {
-    const src = startDateStr || dateStr;
-    if (!src) return { num: '18', mon: 'MAR' };
-    if (src.includes('-')) {
-      const d = new Date(src);
-      if (!isNaN(d.getTime())) {
-        const num = d.getDate();
-        const mon = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-        return { num, mon };
-      }
-    }
-    const match = src.match(/(\d+)\s+([A-Za-z]+)/);
-    if (match) return { num: match[1], mon: match[2].slice(0, 3).toUpperCase() };
-    return { num: '18', mon: 'MAR' };
-  };
-
-  const formatEventDate = (ev) => {
-    if (ev.start_date && ev.end_date) {
-      const s = new Date(ev.start_date);
-      const e = new Date(ev.end_date);
-      if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
-        const sStr = s.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-        const eStr = e.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-        return `${sStr} ➔ ${eStr}`;
-      }
-    }
-    return ev.date_str || 'TBA';
-  };
+  const formatEventDate = (ev) => formatCleanDate(ev);
 
   const formatStatus = (status) => {
     switch (status ? status.toLowerCase() : '') {
@@ -412,7 +386,15 @@ export default function Events() {
               <p style={{ fontSize: '14px', margin: 0 }}>There are currently no events listed in this category.</p>
             </div>
           ) : (
-            <div className="events-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px' }}>
+            <div
+              className="events-grid-2"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 380px))',
+                gap: '28px',
+                justifyContent: filteredEvents.length <= 2 ? 'flex-start' : 'center'
+              }}
+            >
               {filteredEvents.map(ev => {
                 const dateBadge = parseDateBadge(ev.date_str, ev.start_date);
                 const eventDateText = formatEventDate(ev);
@@ -421,18 +403,37 @@ export default function Events() {
                 const displayDesc = ev.short_description || ev.description || ev.full_description || '';
 
                 return (
-                  <article key={ev.id} className="event-card-full" style={{ background: 'var(--white)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                  <article
+                    key={ev.id}
+                    className="event-card-full"
+                    style={{
+                      background: 'var(--white)',
+                      borderRadius: '18px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 20px rgba(15,27,60,0.06)',
+                      border: '1.5px solid #e8dfd1',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+                    }}
+                  >
                     <div
                       className="event-banner"
                       onClick={() => openDetailsModal(ev)}
-                      style={{ cursor: 'pointer', position: 'relative', ...(!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}) }}
+                      style={{
+                        cursor: 'pointer',
+                        position: 'relative',
+                        height: '210px',
+                        overflow: 'hidden',
+                        background: 'linear-gradient(135deg,#0f1b3c 0%,#1a3060 100%)'
+                      }}
                     >
                       {ev.image ? (
-                        <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
+                        <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div className="event-banner-overlay" style={{ opacity: 1, background: 'linear-gradient(135deg,rgba(15,27,60,0.9),rgba(15,27,60,0.6))' }}>
-                          <div className="event-name">{ev.title}</div>
-                          <div className="event-sub">{ev.subtitle}</div>
+                        <div className="event-banner-overlay" style={{ opacity: 1, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+                          <div className="event-name" style={{ fontSize: '20px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{ev.title}</div>
+                          {ev.subtitle && <div className="event-sub" style={{ fontSize: '12px', color: 'var(--gold)', marginTop: '4px' }}>{ev.subtitle}</div>}
                         </div>
                       )}
                       <div className="event-date-badge">
@@ -441,36 +442,60 @@ export default function Events() {
                       </div>
                     </div>
 
-                    <div className="event-info" style={{ padding: '24px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-                        <div className="event-title-sm" style={{ fontWeight: 800, fontSize: '20px', color: 'var(--navy)' }}>{ev.title}</div>
-                        <span className={`event-status ${statusInfo.class}`} style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700 }}>
+                    <div className="event-info" style={{ padding: '22px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <div
+                          className="event-title-sm"
+                          style={{
+                            fontWeight: 800,
+                            fontSize: '18px',
+                            color: 'var(--navy)',
+                            lineHeight: 1.25,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {ev.title}
+                        </div>
+                        <span className={`event-status ${statusInfo.class}`} style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
                           {statusInfo.label}
                         </span>
                       </div>
 
                       {ev.subtitle && (
-                        <div style={{ fontSize: '13px', color: 'var(--gold)', fontWeight: 600, marginBottom: '8px' }}>
+                        <div style={{ fontSize: '12.5px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', marginBottom: '8px' }}>
                           {ev.subtitle}
                         </div>
                       )}
 
-                      <div className="event-meta" style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-mid)', marginBottom: '14px' }}>
-                        <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> {eventDateText}
+                      <div className="event-meta" style={{ display: 'flex', gap: '14px', fontSize: '12px', color: 'var(--text-mid)', marginBottom: '12px', flexWrap: 'wrap' }}>
+                        <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style={{ color: 'var(--gold)' }}><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> {eventDateText}
                         </div>
-                        <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
+                        <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style={{ color: 'var(--gold)' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
                         </div>
                       </div>
 
                       {displayDesc && (
-                        <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5, marginBottom: '20px' }}>
+                        <p style={{
+                          fontSize: '13px',
+                          color: '#64748b',
+                          lineHeight: 1.55,
+                          marginBottom: '16px',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
                           {displayDesc}
                         </p>
                       )}
 
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '16px' }}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: 'auto', paddingTop: '10px' }}>
                         <button
                           type="button"
                           onClick={() => openDetailsModal(ev)}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { formatCleanDate, parseDateBadge } from '../utils/dateFormatter';
 
 const DEFAULT_HOME_EVENTS = [
   {
@@ -117,14 +118,6 @@ export default function Home() {
     }
   };
 
-  const parseDateBadge = (dateStr) => {
-    if (!dateStr) return { num: '18', mon: 'MAR' };
-    const parts = dateStr.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return { num: parts[0], mon: parts[1].slice(0, 3).toUpperCase() };
-    }
-    return { num: '18', mon: 'MAR' };
-  };
 
   return (
     <>
@@ -211,14 +204,24 @@ export default function Home() {
           <h2 className="section-title center">Experience Extraordinary<br /><span className="gold">Student Initiatives.</span></h2>
           <p className="section-subtitle center">From technical symposiums to cultural extravaganzas, AAYAM brings energy and purpose to campus life.</p>
 
-          <div className="events-grid-home" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px', marginTop: '40px' }}>
+          <div
+            className="events-grid-home"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 380px))',
+              gap: '28px',
+              marginTop: '40px',
+              justifyContent: homeEvents.length <= 2 ? 'flex-start' : 'center'
+            }}
+          >
             {homeEvents.map((ev) => {
-              const badge = parseDateBadge(ev.date_str);
+              const badge = parseDateBadge(ev.date_str, ev.start_date);
+              const eventDateText = formatCleanDate(ev);
               return (
-                <article key={ev.id} className="event-card hover-card">
-                  <div className="event-banner" style={!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}}>
+                <article key={ev.id} className="event-card hover-card" style={{ display: 'flex', flexDirection: 'column', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e8dfd1' }}>
+                  <div className="event-banner" style={{ position: 'relative', height: '200px', ...(!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}) }}>
                     {ev.image ? (
-                      <img src={ev.image} alt={ev.title} />
+                      <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div className="event-banner-overlay" style={{ opacity: 1, background: 'linear-gradient(135deg,rgba(15,27,60,0.9),rgba(15,27,60,0.6))' }}>
                         <div className="event-name">{ev.title}</div>
@@ -230,12 +233,17 @@ export default function Home() {
                       <div className="event-date-mon">{badge.mon}</div>
                     </div>
                   </div>
-                  <div className="event-info">
-                    <div className="event-title-sm">{ev.title}</div>
-                    <p className="event-desc-sm">{ev.description || ev.subtitle || 'Exciting student event organized by AAYAM UIT.'}</p>
-                    <div className="event-meta">
-                      <div className="event-meta-item">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
+                  <div className="event-info" style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div className="event-title-sm" style={{ fontWeight: 800, fontSize: '18px', color: 'var(--navy)', lineHeight: 1.3, marginBottom: '6px' }}>{ev.title}</div>
+                    <p className="event-desc-sm" style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5, margin: '0 0 14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {ev.description || ev.subtitle || 'Exciting student event organized by AAYAM UIT.'}
+                    </p>
+                    <div className="event-meta" style={{ display: 'flex', gap: '14px', marginTop: 'auto', fontSize: '12px', color: 'var(--text-mid)', flexWrap: 'wrap' }}>
+                      <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> {eventDateText}
+                      </div>
+                      <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
                       </div>
                     </div>
                   </div>

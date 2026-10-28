@@ -577,7 +577,51 @@ app.post('/api/admin/events', authAdmin, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Title, category, and location are required.' });
     }
 
-    const computedDateStr = date_str || (start_date && end_date ? `${start_date} to ${end_date}` : start_date || '');
+function formatEventDateString(startDate, endDate, manualDateStr) {
+  if (manualDateStr && !manualDateStr.includes('T') && !manualDateStr.includes('to')) {
+    return manualDateStr.trim();
+  }
+
+  let start = startDate ? new Date(startDate) : null;
+  let end = endDate ? new Date(endDate) : null;
+
+  if ((!start || isNaN(start.getTime())) && manualDateStr) {
+    if (manualDateStr.includes(' to ')) {
+      const parts = manualDateStr.split(' to ');
+      const p0 = new Date(parts[0].trim());
+      const p1 = new Date(parts[1].trim());
+      if (!isNaN(p0.getTime())) start = p0;
+      if (!isNaN(p1.getTime())) end = p1;
+    }
+  }
+
+  if (start && !isNaN(start.getTime())) {
+    const sDay = start.getDate();
+    const sMon = start.toLocaleString('en-US', { month: 'short' });
+    const sYr = start.getFullYear();
+
+    if (end && !isNaN(end.getTime())) {
+      const eDay = end.getDate();
+      const eMon = end.toLocaleString('en-US', { month: 'short' });
+      const eYr = end.getFullYear();
+
+      if (sDay === eDay && sMon === eMon && sYr === eYr) {
+        return `${sDay} ${sMon} ${sYr}`;
+      }
+      if (sMon === eMon && sYr === eYr) {
+        return `${sDay} – ${eDay} ${sMon} ${sYr}`;
+      }
+      if (sYr === eYr) {
+        return `${sDay} ${sMon} – ${eDay} ${eMon} ${sYr}`;
+      }
+      return `${sDay} ${sMon} ${sYr} – ${eDay} ${eMon} ${eYr}`;
+    }
+    return `${sDay} ${sMon} ${sYr}`;
+  }
+  return manualDateStr || 'TBA';
+}
+
+    const computedDateStr = formatEventDateString(start_date, end_date, date_str);
     const mainDescription = short_description || description || '';
     const customFieldsStr = typeof custom_fields === 'object' ? JSON.stringify(custom_fields) : (custom_fields || '');
     const slideshowStr = typeof slideshow_images === 'object' ? JSON.stringify(slideshow_images) : (slideshow_images || '');
@@ -626,7 +670,7 @@ app.put('/api/admin/events/:id', authAdmin, async (req, res) => {
       await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured' AND id != ?`, [req.params.id]);
     }
 
-    const computedDateStr = date_str || (start_date && end_date ? `${start_date} to ${end_date}` : start_date || '');
+    const computedDateStr = formatEventDateString(start_date, end_date, date_str);
     const mainDescription = short_description || description || '';
     const customFieldsStr = typeof custom_fields === 'object' ? JSON.stringify(custom_fields) : (custom_fields || '');
     const slideshowStr = typeof slideshow_images === 'object' ? JSON.stringify(slideshow_images) : (slideshow_images || '');
