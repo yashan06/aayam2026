@@ -1,82 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 import EventDetailsView from '../components/EventDetailsView';
 import { formatCleanDate, parseDateBadge } from '../utils/dateFormatter';
 
-const DEFAULT_EVENTS = [
-  {
-    id: 1,
-    title: 'Equinox 3.0',
-    subtitle: 'Technical Symposium',
-    category: 'technical',
-    date_str: '18 March 2026',
-    location: 'KU Campus',
-    description: 'The flagship event of AAYAM UIT — a national-level technical symposium bringing together the brightest minds for competitions, talks, and innovation showcases.',
-    status: 'featured',
-    image: '/equinox_event.png'
-  },
-  {
-    id: 2,
-    title: 'Inferno 3.0',
-    subtitle: 'The Battle of Brains',
-    category: 'technical',
-    date_str: '19 March 2026',
-    location: 'KU Campus',
-    description: 'Intense coding battles, robotics challenges, and problem solving hackathons.',
-    status: 'upcoming',
-    image: '/inferno_event.png'
-  },
-  {
-    id: 3,
-    title: 'Ariaro 4.0',
-    subtitle: 'National Level Technical Symposium',
-    category: 'technical',
-    date_str: '20 March 2026',
-    location: 'KU Campus',
-    description: 'National symposium showcasing student tech projects and guest keynotes.',
-    status: 'upcoming',
-    image: '/ariaro_event.png'
-  },
-  {
-    id: 4,
-    title: 'Data Science Workshop',
-    subtitle: 'Hands-on Machine Learning',
-    category: 'technical',
-    date_str: '28 Jan 2026',
-    location: 'CS Lab, KU',
-    description: 'An interactive workshop covering practical Python ML algorithms, data visualisations, and predictive analytics.',
-    status: 'past',
-    image: ''
-  },
-  {
-    id: 5,
-    title: 'Rang 2.0 — Cultural Festival',
-    subtitle: 'Annual Cultural Festival',
-    category: 'non-technical',
-    date_str: '15 Feb 2026',
-    location: 'KU Amphitheater',
-    description: 'A vibrant celebration of music, dance, fashion, and artistic expressions by students.',
-    status: 'past',
-    image: ''
-  },
-  {
-    id: 6,
-    title: 'Sports League 2026',
-    subtitle: 'Inter-Branch Championship',
-    category: 'non-technical',
-    date_str: '10 April 2026',
-    location: 'KU Sports Complex',
-    description: 'Inter-departmental athletic leagues and tournaments.',
-    status: 'registering',
-    image: ''
-  }
-];
+let cachedEventsList = null;
 
 export default function Events() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState('all');
-  const [eventsList, setEventsList] = useState(DEFAULT_EVENTS);
-  const [loading, setLoading] = useState(false);
-  const [modalState, setModalState] = useState({ isOpen: false, eventId: 1, eventTitle: '' });
+  const [eventsList, setEventsList] = useState(() => cachedEventsList || []);
+  const [loading, setLoading] = useState(() => !cachedEventsList);
+  const [modalState, setModalState] = useState({ isOpen: false, eventId: 1, eventTitle: '', eventCustomFields: null });
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
@@ -85,9 +20,10 @@ export default function Events() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?_t=${Date.now()}`);
       const data = await res.json();
-      if (data.success && Array.isArray(data.events) && data.events.length > 0) {
+      if (data.success && Array.isArray(data.events)) {
+        cachedEventsList = data.events;
         setEventsList(data.events);
       }
     } catch (err) {
@@ -97,21 +33,55 @@ export default function Events() {
     }
   };
 
+  // URL deep-linking: ?eventId=... or ?id=... opens event details, ?registerId=... opens register modal
+  useEffect(() => {
+    const eventIdParam = searchParams.get('eventId') || searchParams.get('id');
+    const registerIdParam = searchParams.get('registerId');
+
+    if (eventsList.length > 0) {
+      if (eventIdParam) {
+        const found = eventsList.find(e => String(e.id) === String(eventIdParam));
+        if (found) {
+          setSelectedEvent(found);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+      if (registerIdParam) {
+        const found = eventsList.find(e => String(e.id) === String(registerIdParam));
+        if (found) {
+          openRegisterModal(found.id, found.title, found.custom_fields);
+        }
+      }
+    }
+  }, [searchParams, eventsList]);
+
   const openRegisterModal = (id, title, customFields) => {
     setModalState({ isOpen: true, eventId: id, eventTitle: title, eventCustomFields: customFields });
   };
 
   const closeRegisterModal = () => {
-    setModalState({ ...modalState, isOpen: false });
+    setModalState(prev => ({ ...prev, isOpen: false }));
+    if (searchParams.get('registerId')) {
+      const params = new URLSearchParams(searchParams);
+      params.delete('registerId');
+      setSearchParams(params, { replace: true });
+    }
   };
 
   const openDetailsModal = (eventObj) => {
     setSelectedEvent(eventObj);
+    const params = new URLSearchParams(searchParams);
+    params.set('eventId', eventObj.id);
+    setSearchParams(params, { replace: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const closeDetailsModal = () => {
-    setDetailsModalState({ isOpen: false, event: null });
+  const handleBackFromDetails = () => {
+    setSelectedEvent(null);
+    const params = new URLSearchParams(searchParams);
+    params.delete('eventId');
+    params.delete('id');
+    setSearchParams(params, { replace: true });
   };
 
   const formatEventDate = (ev) => formatCleanDate(ev);
@@ -140,7 +110,7 @@ export default function Events() {
       <>
         <EventDetailsView
           event={selectedEvent}
-          onBack={() => setSelectedEvent(null)}
+          onBack={handleBackFromDetails}
           onRegister={openRegisterModal}
         />
         <EventRegistrationModal
@@ -377,8 +347,19 @@ export default function Events() {
       <section className="all-events" style={{ padding: '60px 40px', background: 'var(--cream-dark)' }}>
         <div className="all-events-inner" style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div className="section-tag mb-16">ALL EVENTS</div>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--navy)', fontWeight: 600 }}>Loading events...</div>
+          {loading && eventsList.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--navy)' }}>
+              <div style={{
+                margin: '0 auto 16px',
+                width: '36px',
+                height: '36px',
+                border: '3px solid #e8dfd1',
+                borderTopColor: 'var(--gold)',
+                borderRadius: '50%',
+                animation: 'aayamSpin 0.8s linear infinite'
+              }}></div>
+              <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-mid)', margin: 0 }}>Loading events...</p>
+            </div>
           ) : filteredEvents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: '16px', color: '#64748b' }}>
               <div style={{ fontSize: '36px', marginBottom: '12px' }}>📅</div>

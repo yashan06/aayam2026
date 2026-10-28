@@ -1,39 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatCleanDate, parseDateBadge } from '../utils/dateFormatter';
 
-const DEFAULT_HOME_EVENTS = [
-  {
-    id: 1,
-    title: 'EQUINOX 3.0',
-    subtitle: 'Technical Symposium',
-    description: 'The flagship technical symposium of UIT — hackathons, paper presentations, and tech talks.',
-    date_str: '18 MAR',
-    location: 'KU Campus',
-    image: '/equinox_event.png'
-  },
-  {
-    id: 2,
-    title: 'INFERNO 3.0',
-    subtitle: 'The Battle of Brains',
-    description: 'Intense coding battles, robotics challenges, and problem solving hackathons.',
-    date_str: '19 MAR',
-    location: 'KU Auditorium',
-    image: '/inferno_event.png'
-  },
-  {
-    id: 3,
-    title: 'ARIARO 4.0',
-    subtitle: 'National Technical Symposium',
-    description: 'National symposium showcasing student tech projects and guest keynotes.',
-    date_str: '20 MAR',
-    location: 'KU Engineering Block',
-    image: '/ariaro_event.png'
-  }
-];
+let cachedHomeEvents = null;
 
 export default function Home() {
-  const [homeEvents, setHomeEvents] = useState(DEFAULT_HOME_EVENTS);
+  const navigate = useNavigate();
+  const [homeEvents, setHomeEvents] = useState(() => cachedHomeEvents || []);
   const [momentsList, setMomentsList] = useState([]);
 
   useEffect(() => {
@@ -96,10 +69,12 @@ export default function Home() {
 
   const fetchHomeEvents = async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?_t=${Date.now()}`);
       const data = await res.json();
-      if (data.success && Array.isArray(data.events) && data.events.length > 0) {
-        setHomeEvents(data.events.slice(0, 3));
+      if (data.success && Array.isArray(data.events)) {
+        const top3 = data.events.slice(0, 3);
+        cachedHomeEvents = top3;
+        setHomeEvents(top3);
       }
     } catch (err) {
       console.error('Error fetching home events:', err);
@@ -214,42 +189,131 @@ export default function Home() {
               justifyContent: homeEvents.length <= 2 ? 'flex-start' : 'center'
             }}
           >
-            {homeEvents.map((ev) => {
-              const badge = parseDateBadge(ev.date_str, ev.start_date);
-              const eventDateText = formatCleanDate(ev);
-              return (
-                <article key={ev.id} className="event-card hover-card" style={{ display: 'flex', flexDirection: 'column', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e8dfd1' }}>
-                  <div className="event-banner" style={{ position: 'relative', height: '200px', ...(!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}) }}>
-                    {ev.image ? (
-                      <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div className="event-banner-overlay" style={{ opacity: 1, background: 'linear-gradient(135deg,rgba(15,27,60,0.9),rgba(15,27,60,0.6))' }}>
-                        <div className="event-name">{ev.title}</div>
-                        <div className="event-sub">{ev.subtitle || 'Special Event'}</div>
+            {homeEvents.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-mid)', gridColumn: '1 / -1' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  margin: '0 auto 12px',
+                  border: '3px solid #e8dfd1',
+                  borderTopColor: 'var(--gold)',
+                  borderRadius: '50%',
+                  animation: 'aayamSpin 0.8s linear infinite'
+                }} />
+                <p style={{ fontSize: '14px', margin: 0, fontWeight: 600 }}>Loading events...</p>
+              </div>
+            ) : (
+              homeEvents.map((ev) => {
+                const badge = parseDateBadge(ev.date_str, ev.start_date);
+                const eventDateText = formatCleanDate(ev);
+                const isUpcoming = (ev.status || '').toLowerCase() !== 'past' && (ev.status || '').toLowerCase() !== 'completed';
+
+                return (
+                  <article
+                    key={ev.id}
+                    className="event-card hover-card"
+                    onClick={() => navigate(`/events?eventId=${ev.id}`)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      border: '1px solid #e8dfd1',
+                      cursor: 'pointer',
+                      background: 'var(--white, #fff)',
+                      transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+                    }}
+                  >
+                    <div className="event-banner" style={{ position: 'relative', height: '200px', ...(!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}) }}>
+                      {ev.image ? (
+                        <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div className="event-banner-overlay" style={{ opacity: 1, background: 'linear-gradient(135deg,rgba(15,27,60,0.9),rgba(15,27,60,0.6))' }}>
+                          <div className="event-name">{ev.title}</div>
+                          <div className="event-sub">{ev.subtitle || 'Special Event'}</div>
+                        </div>
+                      )}
+                      <div className="event-date-badge">
+                        <div className="event-date-num">{badge.num}</div>
+                        <div className="event-date-mon">{badge.mon}</div>
                       </div>
-                    )}
-                    <div className="event-date-badge">
-                      <div className="event-date-num">{badge.num}</div>
-                      <div className="event-date-mon">{badge.mon}</div>
                     </div>
-                  </div>
-                  <div className="event-info" style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <div className="event-title-sm" style={{ fontWeight: 800, fontSize: '18px', color: 'var(--navy)', lineHeight: 1.3, marginBottom: '6px' }}>{ev.title}</div>
-                    <p className="event-desc-sm" style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5, margin: '0 0 14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {ev.description || ev.subtitle || 'Exciting student event organized by AAYAM UIT.'}
-                    </p>
-                    <div className="event-meta" style={{ display: 'flex', gap: '14px', marginTop: 'auto', fontSize: '12px', color: 'var(--text-mid)', flexWrap: 'wrap' }}>
-                      <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> {eventDateText}
+                    <div className="event-info" style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div className="event-title-sm" style={{ fontWeight: 800, fontSize: '18px', color: 'var(--navy)', lineHeight: 1.3, marginBottom: '6px' }}>{ev.title}</div>
+                      <p className="event-desc-sm" style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5, margin: '0 0 14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {ev.description || ev.subtitle || 'Exciting student event organized by AAYAM UIT.'}
+                      </p>
+                      <div className="event-meta" style={{ display: 'flex', gap: '14px', marginTop: 'auto', fontSize: '12px', color: 'var(--text-mid)', flexWrap: 'wrap' }}>
+                        <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                          <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> {eventDateText}
+                        </div>
+                        {ev.location && (
+                          <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
+                          </div>
+                        )}
                       </div>
-                      <div className="event-meta-item" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style={{ color: 'var(--gold)' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> {ev.location}
+
+                      {/* Action buttons to view event or register directly */}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #f1ece4' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/events?eventId=${ev.id}`);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '9px 12px',
+                            background: '#FAF6F0',
+                            color: 'var(--navy)',
+                            border: '1px solid #e8dfd1',
+                            borderRadius: '24px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = '#0F1B3C'; e.currentTarget.style.color = '#fff'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = '#FAF6F0'; e.currentTarget.style.color = 'var(--navy)'; }}
+                        >
+                          View Details ➔
+                        </button>
+                        {isUpcoming && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/events?registerId=${ev.id}`);
+                            }}
+                            className="btn-primary"
+                            style={{
+                              flex: 1,
+                              padding: '9px 12px',
+                              borderRadius: '24px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            Register ↗
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })
+            )}
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '40px' }}>
