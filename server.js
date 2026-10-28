@@ -377,10 +377,12 @@ app.post('/api/contact', async (req, res) => {
 // Get Events List (Filterable)
 app.get('/api/events', async (req, res) => {
   try {
-    const { category, status } = req.query;
+    const { category, status, _t } = req.query;
     const cacheKey = `events_${category || 'all'}_${status || 'all'}`;
-    const cached = getCached(cacheKey);
-    if (cached) return res.json(cached);
+    if (!_t) {
+      const cached = getCached(cacheKey);
+      if (cached) return res.json(cached);
+    }
 
     let query = 'SELECT * FROM events WHERE 1=1';
     const params = [];
@@ -699,18 +701,28 @@ app.put('/api/admin/events/:id', authAdmin, async (req, res) => {
   }
 });
 
-// Admin: Set Event as Featured Spotlight
+// Admin: Set or Remove Event as Featured Spotlight
 app.patch('/api/admin/events/:id/feature', authAdmin, async (req, res) => {
   try {
-    const eventId = req.params.id;
+    const eventId = Number(req.params.id) || req.params.id;
+    const { action } = req.body || {};
+
+    if (action === 'unfeature' || action === 'remove') {
+      await dbRun(`UPDATE events SET status = 'upcoming' WHERE id = ?`, [eventId]);
+      clearCachePrefix('events');
+      return res.json({ success: true, message: 'Event removed from Featured Spotlight.' });
+    }
+
+    // Unfeature any existing featured event first so there's always at most one featured spotlight
     await dbRun(`UPDATE events SET status = 'upcoming' WHERE status = 'featured'`);
+    // Then set this event as featured
     await dbRun(`UPDATE events SET status = 'featured' WHERE id = ?`, [eventId]);
 
     clearCachePrefix('events');
     res.json({ success: true, message: 'Event successfully set as Featured Spotlight!' });
   } catch (err) {
     console.error('Error setting featured event:', err);
-    res.status(500).json({ success: false, error: 'Failed to update featured event.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to update featured event.' });
   }
 });
 

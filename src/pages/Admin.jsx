@@ -490,20 +490,22 @@ export default function Admin() {
     }
   };
 
-  const handleSetFeatured = async (eventId) => {
+  const handleSetFeatured = async (eventId, isCurrentlyFeatured = false) => {
     try {
       const res = await fetch(`/api/admin/events/${eventId}/feature`, {
         method: 'PATCH',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: isCurrentlyFeatured ? 'unfeature' : 'feature' })
       });
-      const data = await res.json();
-      if (data.success) {
-        loadEvents();
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.success) {
+        await loadEvents();
+        window.alert(isCurrentlyFeatured ? 'Event removed from Featured Spotlight.' : '⭐ Event set as Featured Spotlight!');
       } else {
-        window.alert(data.error || 'Failed to update featured event.');
+        window.alert(data?.error || 'Failed to update featured event.');
       }
     } catch (err) {
-      window.alert('Network error setting featured event.');
+      window.alert(err.message || 'Network error setting featured event.');
     }
   };
 
@@ -1011,15 +1013,26 @@ export default function Admin() {
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               {!isFeatured ? (
                                 <button
-                                  onClick={() => handleSetFeatured(ev.id)}
+                                  type="button"
+                                  onClick={() => handleSetFeatured(ev.id, false)}
                                   style={{ padding: '5px 12px', background: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#92400e', border: '1px solid #f59e0b', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                 >
-                                  ⭐ Set as Featured Spotlight
+                                  ⭐ Set as Spotlight
                                 </button>
                               ) : (
-                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803d', background: '#dcfce7', padding: '5px 10px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                  ✓ Active Spotlight
-                                </span>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803d', background: '#dcfce7', padding: '5px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #86efac' }}>
+                                    ✓ Active Spotlight
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetFeatured(ev.id, true)}
+                                    title="Remove this event from Featured Spotlight"
+                                    style={{ padding: '5px 8px', background: '#fff', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                  >
+                                    ✖ Remove
+                                  </button>
+                                </div>
                               )}
                               <button onClick={() => setEditingEvent(ev)} style={{ padding: '5px 12px', background: '#dbeafe', color: '#1d4ed8', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                               <button onClick={() => deleteEvent(ev.id)} style={{ padding: '5px 12px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>

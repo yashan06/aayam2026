@@ -165,13 +165,21 @@ async function querySupabase(mode, sql, params = []) {
     const record = {};
     let paramIdx = 0;
     for (const assign of setAssignments) {
-      const [col] = assign.split('=').map((s) => s.trim());
-      record[col] = params[paramIdx++];
+      const parts = assign.split('=').map((s) => s.trim());
+      const col = parts[0];
+      const valExpr = parts[1];
+      if (valExpr === '?') {
+        record[col] = params[paramIdx++];
+      } else if (valExpr !== undefined) {
+        const unquoted = valExpr.replace(/^['"`]|['"`]$/g, '');
+        record[col] = isNaN(Number(unquoted)) || unquoted === '' ? unquoted : Number(unquoted);
+      }
     }
 
     let q = supabase.from(table).update(record);
     if (wherePart.toLowerCase().includes('id = ?')) {
-      q = q.eq('id', params[paramIdx]);
+      const idVal = params[paramIdx];
+      q = q.eq('id', idVal);
     } else {
       const idMatch = wherePart.match(/id\s*=\s*(\d+)/i);
       if (idMatch) q = q.eq('id', Number(idMatch[1]));
