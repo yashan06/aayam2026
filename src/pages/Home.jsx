@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { formatCleanDate, parseDateBadge } from '../utils/dateFormatter';
 
 let cachedHomeEvents = null;
+let cachedMomentsList = null;
 
 export default function Home() {
   const navigate = useNavigate();
   const [homeEvents, setHomeEvents] = useState(() => cachedHomeEvents || []);
-  const [momentsList, setMomentsList] = useState([]);
+  const [momentsList, setMomentsList] = useState(() => cachedMomentsList || []);
+  const [loadingMoments, setLoadingMoments] = useState(() => !cachedMomentsList);
 
   useEffect(() => {
     fetchHomeEvents();
@@ -83,13 +85,16 @@ export default function Home() {
 
   const fetchMoments = async () => {
     try {
-      const res = await fetch('/api/moments');
+      const res = await fetch(`/api/moments?_t=${Date.now()}`);
       const data = await res.json();
-      if (data.success && Array.isArray(data.images) && data.images.length > 0) {
+      if (data.success && Array.isArray(data.images)) {
+        cachedMomentsList = data.images;
         setMomentsList(data.images);
       }
     } catch (err) {
       console.error('Error fetching moments:', err);
+    } finally {
+      setLoadingMoments(false);
     }
   };
 
@@ -382,20 +387,34 @@ export default function Home() {
             </span>
           </div>
 
-          {/* 4-Card Image Showcase Grid */}
+          {/* Moments Showcase Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: '24px'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '24px',
+            justifyContent: momentsList.length <= 2 ? 'center' : 'stretch'
           }}>
-            {momentsList.length > 0 ? (
+            {loadingMoments && momentsList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '50px 20px', color: '#665C50', gridColumn: '1 / -1' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  margin: '0 auto 12px',
+                  border: '3px solid #DCD1C2',
+                  borderTopColor: '#B88A38',
+                  borderRadius: '50%',
+                  animation: 'aayamSpin 0.8s linear infinite'
+                }} />
+                <p style={{ fontSize: '13px', margin: 0, fontWeight: 600 }}>Loading moments...</p>
+              </div>
+            ) : momentsList.length > 0 ? (
               momentsList.map((item) => (
                 <div
                   key={item.id}
                   style={{
                     borderRadius: '20px',
                     overflow: 'hidden',
-                    height: '270px',
+                    height: '280px',
                     boxShadow: '0 10px 30px rgba(28, 24, 21, 0.08)',
                     background: '#1c1815',
                     position: 'relative',
@@ -413,39 +432,31 @@ export default function Home() {
                       display: 'block'
                     }}
                   />
+                  {item.title && item.title !== 'Moment Photo' && item.title !== 'Moment Image' && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '14px 18px',
+                      background: 'linear-gradient(to top, rgba(15,27,60,0.92) 0%, rgba(15,27,60,0.4) 70%, transparent 100%)',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      letterSpacing: '0.3px',
+                      textAlign: 'left'
+                    }}>
+                      {item.title}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
-              /* Fallback cards if database is being populated */
-              [
-                { id: 1, img: '/equinox_event.png' },
-                { id: 2, img: '/inferno_event.png' },
-                { id: 3, img: '/ariaro_event.png' },
-                { id: 4, img: '/university_sketch.png' }
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    height: '270px',
-                    boxShadow: '0 10px 30px rgba(28, 24, 21, 0.08)',
-                    background: '#1c1815'
-                  }}
-                  className="hover-card"
-                >
-                  <img
-                    src={item.img}
-                    alt="Moments That Matter"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                  />
-                </div>
-              ))
+              <div style={{ textAlign: 'center', padding: '50px 20px', color: '#7a684b', gridColumn: '1 / -1', background: '#ece4d8', borderRadius: '20px', border: '1.5px dashed #dcd1c2' }}>
+                <div style={{ fontSize: '28px', marginBottom: '8px' }}>✨</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#1c1815' }}>Moments Coming Soon</div>
+                <p style={{ fontSize: '13px', color: '#665c50', margin: '4px 0 0' }}>Event & collaboration highlights and posters will appear here.</p>
+              </div>
             )}
           </div>
 

@@ -881,15 +881,17 @@ app.delete('/api/admin/gallery/:id', authAdmin, async (req, res) => {
 // Public: Get Moments Images
 app.get('/api/moments', async (req, res) => {
   try {
-    const cached = getCached('moments_all');
-    if (cached) return res.json(cached);
+    if (!req.query._t) {
+      const cached = getCached('moments_all');
+      if (cached) return res.json(cached);
+    }
 
     const images = await dbAll(`SELECT * FROM moments_images ORDER BY display_order ASC, id ASC`);
     const result = { success: true, count: images.length, images };
     setCached('moments_all', result);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to fetch moments images.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to fetch moments images.' });
   }
 });
 
@@ -899,7 +901,7 @@ app.get('/api/admin/moments', authAdmin, async (req, res) => {
     const images = await dbAll(`SELECT * FROM moments_images ORDER BY display_order ASC, id ASC`);
     res.json({ success: true, count: images.length, images });
   } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to fetch moments images.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to fetch moments images.' });
   }
 });
 
@@ -908,19 +910,19 @@ app.post('/api/admin/moments', authAdmin, async (req, res) => {
   try {
     const { title, image, display_order } = req.body;
     if (!image) {
-      return res.status(400).json({ success: false, error: 'Image is required.' });
+      return res.status(400).json({ success: false, error: 'Image is required. Please choose a photo or provide an image URL.' });
     }
 
     const result = await dbRun(
       `INSERT INTO moments_images (title, image, display_order) VALUES (?, ?, ?)`,
-      [title || 'Moment Image', image, display_order || 0]
+      [title ? title.trim() : 'Moment Photo', image, parseInt(display_order) || 0]
     );
 
     clearCachePrefix('moments');
-    res.status(201).json({ success: true, message: 'Moment photo added.', id: result.lastID });
+    res.status(201).json({ success: true, message: 'Moment photo added successfully.', id: result.lastID });
   } catch (err) {
     console.error('Error adding moment photo:', err);
-    res.status(500).json({ success: false, error: 'Failed to add moment photo.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to add moment photo.' });
   }
 });
 
@@ -934,14 +936,14 @@ app.put('/api/admin/moments/:id', authAdmin, async (req, res) => {
 
     await dbRun(
       `UPDATE moments_images SET title = ?, image = ?, display_order = ? WHERE id = ?`,
-      [title || 'Moment Image', image, display_order || 0, req.params.id]
+      [title ? title.trim() : 'Moment Photo', image, parseInt(display_order) || 0, req.params.id]
     );
 
     clearCachePrefix('moments');
-    res.json({ success: true, message: 'Moment photo updated.' });
+    res.json({ success: true, message: 'Moment photo updated successfully.' });
   } catch (err) {
     console.error('Error updating moment photo:', err);
-    res.status(500).json({ success: false, error: 'Failed to update moment photo.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to update moment photo.' });
   }
 });
 
@@ -952,7 +954,7 @@ app.delete('/api/admin/moments/:id', authAdmin, async (req, res) => {
     clearCachePrefix('moments');
     res.json({ success: true, message: 'Moment photo deleted.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to delete moment photo.' });
+    res.status(500).json({ success: false, error: err.message || 'Failed to delete moment photo.' });
   }
 });
 

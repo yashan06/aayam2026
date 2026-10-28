@@ -172,6 +172,9 @@ async function querySupabase(mode, sql, params = []) {
     let q = supabase.from(table).update(record);
     if (wherePart.toLowerCase().includes('id = ?')) {
       q = q.eq('id', params[paramIdx]);
+    } else {
+      const idMatch = wherePart.match(/id\s*=\s*(\d+)/i);
+      if (idMatch) q = q.eq('id', Number(idMatch[1]));
     }
     const { data, error } = await q.select();
     if (error) throw error;
@@ -184,8 +187,10 @@ async function querySupabase(mode, sql, params = []) {
     const table = deleteMatch[1];
     const wherePart = deleteMatch[2] || '';
     let q = supabase.from(table).delete();
-    if (wherePart.toLowerCase().includes('id = ?')) {
-      q = q.eq('id', params[0]);
+    const idMatch = wherePart.match(/id\s*=\s*(?:\?|(\d+))/i);
+    if (idMatch) {
+      const idVal = idMatch[1] ? Number(idMatch[1]) : params[0];
+      q = q.eq('id', idVal);
     }
     const { data, error } = await q.select();
     if (error) throw error;
