@@ -51,7 +51,8 @@ app.use('/api', (req, res, next) => {
     !req.path.startsWith('/admin') &&
     !req.path.startsWith('/auth') &&
     !req.path.startsWith('/messages') &&
-    !req.path.startsWith('/volunteers/admin');
+    !req.path.startsWith('/volunteers') &&
+    !req.path.startsWith('/volunteer-mode');
 
   if (isPublicGet) {
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
@@ -1058,6 +1059,47 @@ app.get('/api/volunteers', async (req, res) => {
   }
 });
 
+// 3.5. Volunteer KU ID Lookup & Pre-fill Verification
+app.get('/api/volunteers/lookup/:qid', async (req, res) => {
+  try {
+    const rawQid = (req.params.qid || '').trim().toUpperCase();
+    if (!rawQid) {
+      return res.status(400).json({ success: false, error: 'KU ID parameter is required.' });
+    }
+
+    const volunteer = await dbGet(`SELECT * FROM volunteers WHERE UPPER(qid) = ?`, [rawQid]);
+    if (!volunteer) {
+      return res.json({ success: true, exists: false });
+    }
+
+    const hasContact = Boolean(
+      volunteer.phone &&
+      volunteer.phone.trim() &&
+      volunteer.email &&
+      volunteer.email.trim()
+    );
+
+    return res.json({
+      success: true,
+      exists: true,
+      hasContact,
+      volunteer: {
+        id: volunteer.id,
+        name: volunteer.name,
+        qid: volunteer.qid,
+        sem: volunteer.sem,
+        cls: volunteer.cls,
+        cat: volunteer.cat,
+        phone: volunteer.phone || '',
+        email: volunteer.email || ''
+      }
+    });
+  } catch (err) {
+    console.error('Error looking up volunteer:', err);
+    res.status(500).json({ success: false, error: 'Failed to look up volunteer.' });
+  }
+});
+
 // 4. Public Volunteer Registration Submission
 // All fields compulsory: Full Name, KU ID, Semester, Class/Branch, Work Category, Phone Number, Email
 app.post('/api/volunteers', async (req, res) => {
@@ -1074,7 +1116,7 @@ app.post('/api/volunteers', async (req, res) => {
 
     const { name, qid, sem, cls, cat, phone, email, allow_update } = req.body;
 
-    // Strict validation: ALL fields compulsory
+    // Strict validation: ALL 7 fields compulsory
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, error: 'Full Student Name is compulsory.' });
     }
@@ -1095,11 +1137,11 @@ app.post('/api/volunteers', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Work Category / Department is compulsory.' });
     }
     if (!phone || !phone.trim() || phone.trim().replace(/\D/g, '').length < 10) {
-      return res.status(400).json({ success: false, error: 'A valid Mobile / WhatsApp Number (at least 10 digits) is compulsory.' });
+      return res.status(400).json({ success: false, error: 'A valid 10-digit Mobile / WhatsApp Number is compulsory.' });
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !email.trim() || !emailRegex.test(email.trim())) {
-      return res.status(400).json({ success: false, error: 'A valid Email Address is compulsory.' });
+      return res.status(400).json({ success: false, error: 'A valid Student Email Address is compulsory.' });
     }
 
     const cleanName = name.trim();
@@ -1127,8 +1169,8 @@ app.post('/api/volunteers', async (req, res) => {
           sem: existingByEmail.sem,
           cls: existingByEmail.cls,
           cat: existingByEmail.cat,
-          phone: existingByEmail.phone,
-          email: existingByEmail.email
+          phone: existingByEmail.phone || '',
+          email: existingByEmail.email || ''
         }
       });
     }
@@ -1136,38 +1178,57 @@ app.post('/api/volunteers', async (req, res) => {
     // 2. Check if a volunteer with this KU ID already exists
     const existingByQid = await dbGet(`SELECT * FROM volunteers WHERE UPPER(qid) = ?`, [cleanQid]);
     if (existingByQid) {
-      // If user hasn't explicitly clicked "Refill / Update My Form", inform them that they have already filled the form
-      if (!allow_update) {
+      const hasExistingContact = Boolean(
+        existingByQid.phone &&
+        existingByQid.phone.trim() &&
+        existingByQid.email &&
+        existingByQid.email.trim()
+      );
+
+      // Only prompt already_exists if the student had already submitted valid contact info and didn't confirm refill/update
+      if (hasExistingContact && !allow_update) {
         return res.status(409).json({
           success: false,
           already_exists: true,
           duplicate_field: 'qid',
-          error: `You have already filled the volunteer registration form! A record with KU ID ${cleanQid} (${existingByQid.name}) is already registered.`,
-          message: 'You have already filled this form! If you made a mistake or want to update your department or details, you can choose "Refill / Update Form".',
+          error: `You have already registered as a volunteer! A record with KU ID ${cleanQid} (${existingByQid.name}) is recorded.`,
+          message: 'You have already filled this form! If you made a mistake or want to update your department or contact details, click "Refill / Update My Form".',
           existing_volunteer: {
             name: existingByQid.name,
             qid: existingByQid.qid,
             sem: existingByQid.sem,
             cls: existingByQid.cls,
             cat: existingByQid.cat,
-            phone: existingByQid.phone,
-            email: existingByQid.email
+            phone: existingByQid.phone || '',
+            email: existingByQid.email || ''
           }
         });
       }
 
-      // User confirmed they want to refill / update their existing registration
+      // Pre-seeded record (missing phone/email) OR user explicitly requested update:
+      // Update all fields including phone and email
       await dbRun(
         `UPDATE volunteers SET name = ?, sem = ?, cls = ?, cat = ?, phone = ?, email = ? WHERE id = ?`,
         [cleanName, parsedSem, cleanCls, cleanCat, cleanPhone, cleanEmail, existingByQid.id]
       );
 
       clearCachePrefix('volunteers');
-      return res.json({
+      return res.status(200).json({
         success: true,
-        is_update: true,
-        message: `Volunteer registration for ${cleanName} (${cleanQid}) has been successfully updated!`,
-        volunteer: { id: existingByQid.id, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+        is_update: hasExistingContact,
+        message: hasExistingContact
+          ? `Volunteer registration for ${cleanName} (${cleanQid}) has been successfully updated!`
+          : `Volunteer registration for ${cleanName} (${cleanQid}) recorded successfully!`,
+        volunteer: {
+          id: existingByQid.id,
+          name: cleanName,
+          qid: cleanQid,
+          sem: parsedSem,
+          cls: cleanCls,
+          cat: cleanCat,
+          phone: cleanPhone,
+          email: cleanEmail
+        }
       });
     }
 
@@ -1182,7 +1243,16 @@ app.post('/api/volunteers', async (req, res) => {
       success: true,
       is_update: false,
       message: `Volunteer registration for ${cleanName} (${cleanQid}) recorded successfully!`,
-      volunteer: { id: result.lastID, name: cleanName, qid: cleanQid, sem: parsedSem, cls: cleanCls, cat: cleanCat, phone: cleanPhone, email: cleanEmail }
+      volunteer: {
+        id: result.lastID,
+        name: cleanName,
+        qid: cleanQid,
+        sem: parsedSem,
+        cls: cleanCls,
+        cat: cleanCat,
+        phone: cleanPhone,
+        email: cleanEmail
+      }
     });
   } catch (err) {
     console.error('Error submitting volunteer registration:', err);

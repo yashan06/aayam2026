@@ -35,6 +35,7 @@ export default function VolunteerForm() {
   const [submittedData, setSubmittedData] = useState(null);
   const [alreadyRegisteredData, setAlreadyRegisteredData] = useState(null);
   const [isRefillMode, setIsRefillMode] = useState(false);
+  const [lookupNotice, setLookupNotice] = useState(null);
 
   // Fetch current volunteer collection mode
   const fetchMode = async () => {
@@ -64,6 +65,54 @@ export default function VolunteerForm() {
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // KU ID Blur Handler for instant pre-fill / verification
+  const handleQidBlur = async () => {
+    const qidToLookup = formData.qid.trim().toUpperCase();
+    if (!qidToLookup || qidToLookup.length < 4 || isRefillMode) return;
+
+    try {
+      const res = await fetch(`/api/volunteers/lookup/${encodeURIComponent(qidToLookup)}`);
+      const data = await res.json();
+      if (data && data.success && data.exists && data.volunteer) {
+        const v = data.volunteer;
+        if (data.hasContact) {
+          setLookupNotice({
+            type: 'registered',
+            message: `ℹ️ Welcome back, ${v.name}! You are already registered with KU ID ${v.qid}. Your details (including Mobile & Email) have been retrieved from the database.`
+          });
+          setFormData(prev => ({
+            ...prev,
+            name: v.name || prev.name,
+            qid: v.qid || prev.qid,
+            sem: String(v.sem || prev.sem || '1'),
+            cls: v.cls || prev.cls,
+            cat: CATEGORIES.includes(v.cat) ? v.cat : 'Other',
+            customCat: CATEGORIES.includes(v.cat) ? '' : (v.cat || ''),
+            phone: v.phone || prev.phone,
+            email: v.email || prev.email
+          }));
+          setIsRefillMode(true);
+        } else {
+          setLookupNotice({
+            type: 'preseeded',
+            message: `✓ Student Record Found: ${v.name} (${v.cls || 'Sem ' + v.sem}). University details auto-filled. Please enter your Mobile & Email below to complete registration.`
+          });
+          setFormData(prev => ({
+            ...prev,
+            name: v.name || prev.name,
+            qid: v.qid || prev.qid,
+            sem: String(v.sem || prev.sem || '1'),
+            cls: v.cls || prev.cls,
+            cat: CATEGORIES.includes(v.cat) ? v.cat : (v.cat ? 'Other' : prev.cat),
+            customCat: CATEGORIES.includes(v.cat) ? '' : (v.cat || '')
+          }));
+        }
+      }
+    } catch (_) {
+      // Non-blocking lookup
     }
   };
 
@@ -161,18 +210,19 @@ export default function VolunteerForm() {
   const handleStartRefill = () => {
     if (alreadyRegisteredData) {
       setFormData({
-        name: alreadyRegisteredData.name || formData.name,
-        qid: alreadyRegisteredData.qid || formData.qid,
-        sem: String(alreadyRegisteredData.sem || formData.sem || '1'),
-        cls: alreadyRegisteredData.cls || formData.cls,
+        name: alreadyRegisteredData.name || '',
+        qid: alreadyRegisteredData.qid || '',
+        sem: String(alreadyRegisteredData.sem || '1'),
+        cls: alreadyRegisteredData.cls || '',
         cat: CATEGORIES.includes(alreadyRegisteredData.cat) ? alreadyRegisteredData.cat : 'Other',
         customCat: CATEGORIES.includes(alreadyRegisteredData.cat) ? '' : (alreadyRegisteredData.cat || ''),
-        phone: alreadyRegisteredData.phone || formData.phone,
-        email: alreadyRegisteredData.email || formData.email
+        phone: alreadyRegisteredData.phone || formData.phone || '',
+        email: alreadyRegisteredData.email || formData.email || ''
       });
     }
     setIsRefillMode(true);
     setAlreadyRegisteredData(null);
+    setLookupNotice(null);
     setError('');
     window.scrollTo({ top: 380, behavior: 'smooth' });
   };
@@ -181,12 +231,14 @@ export default function VolunteerForm() {
     handleReset();
     setIsRefillMode(false);
     setAlreadyRegisteredData(null);
+    setLookupNotice(null);
   };
 
   const handleReset = () => {
     setSubmittedData(null);
     setAlreadyRegisteredData(null);
     setIsRefillMode(false);
+    setLookupNotice(null);
     setFormData({
       name: '',
       qid: '',
@@ -574,16 +626,18 @@ export default function VolunteerForm() {
                 
                 {/* Field 1: Full Name */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="name" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                     1. Full Student Name <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
                     type="text"
+                    id="name"
                     name="name"
-                    value={formData.name}
+                    value={formData.name || ''}
                     onChange={handleChange}
                     placeholder="e.g. Yashan Oswal"
                     required
+                    autoComplete="name"
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -603,17 +657,20 @@ export default function VolunteerForm() {
 
                 {/* Field 2: KU ID */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="qid" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                     2. KU ID / Enrollment Number <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
                     type="text"
+                    id="qid"
                     name="qid"
-                    value={formData.qid}
+                    value={formData.qid || ''}
                     onChange={handleChange}
+                    onBlur={handleQidBlur}
                     placeholder="e.g. KU2407U448 or 2000016522"
                     required
                     readOnly={isRefillMode}
+                    autoComplete="off"
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -632,17 +689,44 @@ export default function VolunteerForm() {
                   <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', display: 'block' }}>
                     {isRefillMode ? 'KU ID is locked during refill mode.' : 'Your official university roll or enrollment number.'}
                   </span>
+
+                  {lookupNotice && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      background: lookupNotice.type === 'registered' ? '#f0fdf4' : '#eff6ff',
+                      border: `1.5px solid ${lookupNotice.type === 'registered' ? '#86efac' : '#93c5fd'}`,
+                      color: lookupNotice.type === 'registered' ? '#166534' : '#1e40af',
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px'
+                    }}>
+                      <span>{lookupNotice.message}</span>
+                      <button
+                        type="button"
+                        onClick={() => setLookupNotice(null)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 800, fontSize: '18px', lineHeight: 1 }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2-Column Grid: Semester & Class */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="sem" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                       3. Current Semester <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <select
+                      id="sem"
                       name="sem"
-                      value={formData.sem}
+                      value={formData.sem || '1'}
                       onChange={handleChange}
                       required
                       style={{
@@ -664,13 +748,14 @@ export default function VolunteerForm() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="cls" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                       4. Class / Branch / Division <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
                       type="text"
+                      id="cls"
                       name="cls"
-                      value={formData.cls}
+                      value={formData.cls || ''}
                       onChange={handleChange}
                       placeholder="e.g. B.Tech Cyber - 5th, AI-ML (B)"
                       required
@@ -691,12 +776,13 @@ export default function VolunteerForm() {
 
                 {/* Field 5: Work Category / Department */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="cat" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                     5. Work Department / Category <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <select
+                    id="cat"
                     name="cat"
-                    value={formData.cat}
+                    value={formData.cat || 'Management'}
                     onChange={handleChange}
                     required
                     style={{
@@ -719,8 +805,9 @@ export default function VolunteerForm() {
                   {formData.cat === 'Other' && (
                     <input
                       type="text"
+                      id="customCat"
                       name="customCat"
-                      value={formData.customCat}
+                      value={formData.customCat || ''}
                       onChange={handleChange}
                       placeholder="Type custom work department..."
                       required
@@ -743,16 +830,18 @@ export default function VolunteerForm() {
                 {/* 2-Column Grid: Phone & Email */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="phone" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                       6. Mobile / WhatsApp Number <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
                       type="tel"
+                      id="phone"
                       name="phone"
-                      value={formData.phone}
+                      value={formData.phone || ''}
                       onChange={handleChange}
                       placeholder="e.g. 9876543210"
                       required
+                      autoComplete="tel"
                       style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -768,16 +857,18 @@ export default function VolunteerForm() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="email" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
                       7. Student Email Address <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
                       type="email"
+                      id="email"
                       name="email"
-                      value={formData.email}
+                      value={formData.email || ''}
                       onChange={handleChange}
                       placeholder="e.g. student@ku.edu.in"
                       required
+                      autoComplete="email"
                       style={{
                         width: '100%',
                         padding: '12px 16px',
