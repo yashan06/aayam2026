@@ -263,12 +263,12 @@ export default function VolunteerForm() {
         <div className="page-hero-inner">
           <div className="page-hero-content animate-in">
             {/* Logos Header */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '16px', marginBottom: '18px', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', padding: '8px 18px', borderRadius: '40px', border: '1px solid var(--border)' }}>
-              <img src="/karnavati_logo.png" alt="Karnavati University" style={{ height: '36px', objectFit: 'contain' }} />
-              <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
-              <img src="/uit_logo.png" alt="UIT" style={{ height: '36px', objectFit: 'contain' }} />
-              <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
-              <img src="/aayam_logo.png" alt="AAYAM" style={{ height: '36px', objectFit: 'contain' }} />
+            <div className="vol-hero-logos">
+              <img src="/karnavati_logo.png" alt="Karnavati University" />
+              <div className="vol-divider"></div>
+              <img src="/uit_logo.png" alt="UIT" />
+              <div className="vol-divider"></div>
+              <img src="/aayam_logo.png" alt="AAYAM" />
             </div>
 
             <div className="section-tag" style={{ letterSpacing: '2px', display: 'block', marginBottom: '8px' }}>
@@ -286,29 +286,19 @@ export default function VolunteerForm() {
       </section>
 
       {/* 2. MAIN FORM SECTION */}
-      <section style={{ padding: '40px 24px 80px', background: 'var(--cream)' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <section className="vol-section">
+        <div className="vol-container">
 
           {/* STATUS PILL BAR */}
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '14px 20px',
-            marginBottom: '24px',
-            border: mode === 'on' ? '1.5px solid #86efac' : '1.5px solid #fca5a5',
-            boxShadow: '0 4px 18px rgba(15,27,60,0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px'
+          <div className="vol-status-pill" style={{
+            border: mode === 'on' ? '1.5px solid #86efac' : '1.5px solid #fca5a5'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="vol-status-pill-left">
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 12px',
+                padding: '5px 12px',
                 borderRadius: '999px',
                 fontSize: '12px',
                 fontWeight: 800,
@@ -333,7 +323,7 @@ export default function VolunteerForm() {
               </span>
             </div>
 
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '4px 10px', borderRadius: '6px', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '5px 12px', borderRadius: '6px', letterSpacing: '0.5px' }}>
               * ALL 7 FIELDS COMPULSORY
             </span>
           </div>
@@ -349,14 +339,7 @@ export default function VolunteerForm() {
 
           {/* REGISTRATION CLOSED STATE */}
           {mode === 'off' && (
-            <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #fed7aa',
-              borderRadius: '20px',
-              padding: '50px 32px',
-              textAlign: 'center',
-              boxShadow: 'var(--shadow-md)'
-            }}>
+            <div className="vol-card closed-card">
               <div style={{
                 width: '76px',
                 height: '76px',
@@ -386,7 +369,7 @@ export default function VolunteerForm() {
                 • When the administration turns <strong>ON</strong> data collection mode, you can immediately revisit this link to register.
               </div>
 
-              <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="vol-btn-group-mobile" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/" className="btn-primary" style={{ padding: '12px 28px', fontSize: '14px' }}>
                   Return to Home
                 </Link>
@@ -404,6 +387,7 @@ export default function VolunteerForm() {
                     fontSize: '14px',
                     display: 'inline-flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '6px'
                   }}
                 >
@@ -415,15 +399,7 @@ export default function VolunteerForm() {
 
           {/* 3. ALREADY REGISTERED / DUPLICATE DETECTED WARNING CARD */}
           {alreadyRegisteredData && (
-            <div style={{
-              background: '#ffffff',
-              border: '2px solid #f59e0b',
-              borderRadius: '20px',
-              padding: '40px 32px',
-              textAlign: 'center',
-              boxShadow: '0 12px 36px rgba(245, 158, 11, 0.14)',
-              marginBottom: '32px'
-            }}>
+            <div className="vol-card already-card" style={{ marginBottom: '32px' }}>
               <div style={{
                 width: '74px',
                 height: '74px',
@@ -477,7 +453,7 @@ export default function VolunteerForm() {
                 <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
                   📋 Your Currently Recorded Details:
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '13px' }}>
+                <div className="vol-summary-grid" style={{ fontSize: '13px' }}>
                   <div>
                     <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Student Name</span>
                     <strong style={{ color: 'var(--navy)', fontSize: '14px' }}>{alreadyRegisteredData.name}</strong>
@@ -510,12 +486,12 @@ export default function VolunteerForm() {
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="vol-btn-group-mobile" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={handleStartRefill}
                   className="btn-primary"
-                  style={{ padding: '12px 26px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ padding: '12px 26px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
                   🔄 Refill / Update My Form
                 </button>
@@ -531,7 +507,10 @@ export default function VolunteerForm() {
                     border: '1.5px solid var(--border)',
                     fontSize: '14px',
                     fontWeight: 700,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
                   Enter Different KU ID
@@ -549,7 +528,8 @@ export default function VolunteerForm() {
                     fontWeight: 600,
                     textDecoration: 'none',
                     display: 'inline-flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
                   Return to Website
@@ -560,14 +540,7 @@ export default function VolunteerForm() {
 
           {/* 4. REGISTRATION ACTIVE FORM */}
           {mode === 'on' && !submittedData && !alreadyRegisteredData && (
-            <div style={{
-              background: '#ffffff',
-              borderRadius: '20px',
-              border: isRefillMode ? '2px solid #3b82f6' : '1.5px solid var(--border)',
-              padding: '36px 32px',
-              boxShadow: isRefillMode ? '0 10px 30px rgba(59, 130, 246, 0.12)' : 'var(--shadow-md)',
-              transition: 'all 0.3s ease'
-            }}>
+            <div className={`vol-card ${isRefillMode ? 'refill-active' : ''}`}>
               
               {/* Refill Mode Banner */}
               {isRefillMode && (
@@ -626,7 +599,7 @@ export default function VolunteerForm() {
                 
                 {/* Field 1: Full Name */}
                 <div>
-                  <label htmlFor="name" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="name" className="vol-label">
                     1. Full Student Name <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
@@ -638,26 +611,18 @@ export default function VolunteerForm() {
                     placeholder="e.g. Yashan Oswal"
                     required
                     autoComplete="name"
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      background: '#faf8f5',
-                      border: '1.5px solid #dfd7cc',
-                      color: 'var(--navy)',
-                      fontSize: '14px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    className="vol-input"
                   />
-                  <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', display: 'block' }}>
+                  <span className="vol-hint">
                     Enter your official name as registered with Karnavati University.
                   </span>
                 </div>
 
                 {/* Field 2: KU ID */}
                 <div>
-                  <label htmlFor="qid" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="qid" className="vol-label">
                     2. KU ID / Enrollment Number <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
@@ -671,22 +636,17 @@ export default function VolunteerForm() {
                     required
                     readOnly={isRefillMode}
                     autoComplete="off"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    enterKeyHint="next"
+                    className="vol-input"
                     style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      background: isRefillMode ? '#f1f5f9' : '#faf8f5',
-                      border: '1.5px solid #dfd7cc',
-                      color: 'var(--navy)',
                       fontFamily: 'monospace',
-                      fontSize: '15px',
-                      fontWeight: '700',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      cursor: isRefillMode ? 'not-allowed' : 'text'
+                      fontWeight: '700'
                     }}
                   />
-                  <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', display: 'block' }}>
+                  <span className="vol-hint">
                     {isRefillMode ? 'KU ID is locked during refill mode.' : 'Your official university roll or enrollment number.'}
                   </span>
 
@@ -717,10 +677,10 @@ export default function VolunteerForm() {
                   )}
                 </div>
 
-                {/* 2-Column Grid: Semester & Class */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {/* 2-Column Grid: Semester & Class (Stacks automatically on mobile) */}
+                <div className="vol-form-grid">
                   <div>
-                    <label htmlFor="sem" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="sem" className="vol-label">
                       3. Current Semester <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <select
@@ -729,17 +689,7 @@ export default function VolunteerForm() {
                       value={formData.sem || '1'}
                       onChange={handleChange}
                       required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        borderRadius: '10px',
-                        background: '#faf8f5',
-                        border: '1.5px solid #dfd7cc',
-                        color: 'var(--navy)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
+                      className="vol-select"
                     >
                       {SEMESTERS.map(s => (
                         <option key={s} value={s}>Semester {s}</option>
@@ -748,7 +698,7 @@ export default function VolunteerForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="cls" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="cls" className="vol-label">
                       4. Class / Branch / Division <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
@@ -759,24 +709,16 @@ export default function VolunteerForm() {
                       onChange={handleChange}
                       placeholder="e.g. B.Tech Cyber - 5th, AI-ML (B)"
                       required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        borderRadius: '10px',
-                        background: '#faf8f5',
-                        border: '1.5px solid #dfd7cc',
-                        color: 'var(--navy)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      className="vol-input"
                     />
                   </div>
                 </div>
 
                 {/* Field 5: Work Category / Department */}
                 <div>
-                  <label htmlFor="cat" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                  <label htmlFor="cat" className="vol-label">
                     5. Work Department / Category <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <select
@@ -785,17 +727,7 @@ export default function VolunteerForm() {
                     value={formData.cat || 'Management'}
                     onChange={handleChange}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      background: '#faf8f5',
-                      border: '1.5px solid #dfd7cc',
-                      color: 'var(--navy)',
-                      fontSize: '14px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
+                    className="vol-select"
                   >
                     {CATEGORIES.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -811,26 +743,22 @@ export default function VolunteerForm() {
                       onChange={handleChange}
                       placeholder="Type custom work department..."
                       required
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      className="vol-input"
                       style={{
-                        width: '100%',
                         marginTop: '10px',
-                        padding: '12px 16px',
-                        borderRadius: '10px',
                         background: '#ffffff',
-                        border: '1.5px solid var(--gold)',
-                        color: 'var(--navy)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
+                        borderColor: 'var(--gold)'
                       }}
                     />
                   )}
                 </div>
 
-                {/* 2-Column Grid: Phone & Email */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {/* 2-Column Grid: Phone & Email (Stacks automatically on mobile) */}
+                <div className="vol-form-grid">
                   <div>
-                    <label htmlFor="phone" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="phone" className="vol-label">
                       6. Mobile / WhatsApp Number <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
@@ -842,22 +770,15 @@ export default function VolunteerForm() {
                       placeholder="e.g. 9876543210"
                       required
                       autoComplete="tel"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        borderRadius: '10px',
-                        background: '#faf8f5',
-                        border: '1.5px solid #dfd7cc',
-                        color: 'var(--navy)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      enterKeyHint="next"
+                      className="vol-input"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+                    <label htmlFor="email" className="vol-label">
                       7. Student Email Address <span style={{ color: '#dc2626' }}>*</span>
                     </label>
                     <input
@@ -869,17 +790,11 @@ export default function VolunteerForm() {
                       placeholder="e.g. student@ku.edu.in"
                       required
                       autoComplete="email"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        borderRadius: '10px',
-                        background: '#faf8f5',
-                        border: '1.5px solid #dfd7cc',
-                        color: 'var(--navy)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
+                      inputMode="email"
+                      autoCapitalize="none"
+                      spellCheck="false"
+                      enterKeyHint="done"
+                      className="vol-input"
                     />
                   </div>
                 </div>
@@ -889,57 +804,38 @@ export default function VolunteerForm() {
                   ⚡ <strong style={{ color: 'var(--navy)' }}>Compulsory Verification:</strong> All seven fields are mandatory. Once submitted, your profile is immediately recorded in the AAYAM Master Volunteers Database for On-Duty (OD) Attendance validation.
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    padding: '15px 32px',
-                    borderRadius: '12px',
-                    background: isRefillMode
-                      ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
-                      : 'linear-gradient(135deg, #c8922a 0%, #e8a93a 50%, #c8922a 100%)',
-                    color: '#ffffff',
-                    fontSize: '15px',
-                    fontWeight: '800',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    border: 'none',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: isRefillMode
-                      ? '0 8px 24px rgba(2, 132, 199, 0.35)'
-                      : '0 8px 24px rgba(200, 146, 42, 0.35)',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    opacity: loading ? 0.7 : 1
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span style={{ width: '16px', height: '16px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }}></span>
-                      {isRefillMode ? 'Updating Volunteer Details...' : 'Submitting Volunteer Data...'}
-                    </>
-                  ) : (
-                    isRefillMode ? 'Update My Volunteer Registration 🔄' : 'Submit Volunteer Registration ✨'
-                  )}
-                </button>
+                {/* Sticky Action Bar & Submit Button */}
+                <div className="vol-sticky-bar">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="vol-submit-btn"
+                    style={{
+                      background: isRefillMode
+                        ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                        : 'linear-gradient(135deg, #c8922a 0%, #e8a93a 50%, #c8922a 100%)',
+                      boxShadow: isRefillMode
+                        ? '0 8px 24px rgba(2, 132, 199, 0.35)'
+                        : '0 8px 24px rgba(200, 146, 42, 0.35)'
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <span style={{ width: '16px', height: '16px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }}></span>
+                        {isRefillMode ? 'Updating Volunteer Details...' : 'Submitting Volunteer Data...'}
+                      </>
+                    ) : (
+                      isRefillMode ? 'Update My Volunteer Registration 🔄' : 'Submit Volunteer Registration ✨'
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
           )}
 
           {/* 5. SUBMISSION SUCCESS CARD */}
           {submittedData && (
-            <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #86efac',
-              borderRadius: '20px',
-              padding: '44px 32px',
-              textAlign: 'center',
-              boxShadow: '0 12px 36px rgba(16, 185, 129, 0.12)'
-            }}>
+            <div className="vol-card success-card">
               <div style={{ width: '74px', height: '74px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.12)', border: '2px solid #22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '36px', color: '#16a34a' }}>
                 ✓
               </div>
@@ -954,7 +850,7 @@ export default function VolunteerForm() {
 
               {/* Verified Student Summary Card */}
               <div style={{ background: 'var(--cream)', borderRadius: '14px', border: '1.5px solid var(--border)', padding: '24px', maxWidth: '560px', margin: '0 auto 32px', textAlign: 'left' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
+                <div className="vol-summary-grid" style={{ fontSize: '13px' }}>
                   <div>
                     <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Student Name</span>
                     <strong style={{ color: 'var(--navy)', fontSize: '15px' }}>{submittedData.name}</strong>
@@ -986,12 +882,12 @@ export default function VolunteerForm() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="vol-btn-group-mobile" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={handleReset}
                   className="btn-primary"
-                  style={{ padding: '12px 28px', fontSize: '14px' }}
+                  style={{ padding: '12px 28px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   + Register Another Volunteer
                 </button>
@@ -1005,7 +901,10 @@ export default function VolunteerForm() {
                     border: '1.5px solid var(--border)',
                     textDecoration: 'none',
                     fontWeight: '700',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
                   Return to Website
