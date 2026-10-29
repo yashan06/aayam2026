@@ -33,41 +33,65 @@ export default function Navbar() {
     <>
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} id="mainNav">
         <div className="nav-inner">
-          <Link to="/" className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '18px', textDecoration: 'none' }}>
+          <Link to="/" className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', textDecoration: 'none' }}>
             {/* Karnavati University NAAC A+ Logo */}
             <img
               src="/karnavati_logo.png"
               alt="Karnavati University"
               style={{
-                height: '70px',
+                height: scrolled ? '36px' : '44px',
+                width: 'auto',
                 objectFit: 'contain',
-                background: 'transparent'
+                background: 'transparent',
+                transition: 'all 0.25s ease'
               }}
             />
 
-            <div className="nav-divider" style={{ opacity: 0.4, height: '42px' }}></div>
+            <div
+              className="nav-divider"
+              style={{
+                width: '1px',
+                height: scrolled ? '24px' : '30px',
+                background: 'rgba(15, 27, 60, 0.2)',
+                alignSelf: 'center',
+                transition: 'all 0.25s ease'
+              }}
+            />
 
             {/* UIT Logo */}
             <img
               src="/uit_logo.png"
               alt="UIT"
               style={{
-                height: '70px',
+                height: scrolled ? '30px' : '36px',
+                width: 'auto',
                 objectFit: 'contain',
-                background: 'transparent'
+                background: 'transparent',
+                transition: 'all 0.25s ease'
               }}
             />
 
-            <div className="nav-divider" style={{ opacity: 0.4, height: '42px' }}></div>
+            <div
+              className="nav-divider"
+              style={{
+                width: '1px',
+                height: scrolled ? '24px' : '30px',
+                background: 'rgba(15, 27, 60, 0.2)',
+                alignSelf: 'center',
+                transition: 'all 0.25s ease'
+              }}
+            />
 
             {/* AAYAM Logo */}
             <img
               src="/aayam_logo.png"
               alt="AAYAM"
               style={{
-                height: '70px',
+                height: scrolled ? '36px' : '44px',
+                width: 'auto',
                 objectFit: 'contain',
-                background: 'transparent'
+                background: 'transparent',
+                transition: 'all 0.25s ease'
               }}
             />
           </Link>

@@ -72,27 +72,32 @@ button { cursor: pointer; font-family: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
   flex-shrink: 0;
 }
 .nav-brand img {
   display: block;
   vertical-align: middle;
-  height: 70px;
+  height: 44px;
   width: auto;
   object-fit: contain;
   background: transparent;
   margin: 0;
   padding: 0;
+  transition: all 0.25s ease;
 }
 .navbar.scrolled .nav-brand img {
-  height: 58px;
+  height: 36px;
 }
 .nav-divider {
   width: 1px;
-  height: 42px;
-  background: rgba(15, 27, 60, 0.25);
+  height: 30px;
+  background: rgba(15, 27, 60, 0.2);
   align-self: center;
+  transition: all 0.25s ease;
+}
+.navbar.scrolled .nav-divider {
+  height: 24px;
 }
 .nav-links {
   display: flex; align-items: center; gap: 4px;
