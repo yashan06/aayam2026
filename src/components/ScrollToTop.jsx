@@ -15,8 +15,7 @@ export default function ScrollToTop() {
       const scrollToHashElement = () => {
         const el = document.getElementById(cleanHash) ||
                    document.getElementById(`${cleanHash}-team`) ||
-                   document.getElementById(cleanHash.replace(/-team$/, '')) ||
-                   (cleanHash === 'communication' ? document.getElementById('media-team') : null);
+                   document.getElementById(cleanHash.replace(/-team$/, ''));
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           return true;

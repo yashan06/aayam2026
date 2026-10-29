@@ -20,8 +20,7 @@ export default function Footer() {
     const targetHash = `#${branchSlug}`;
     if (location.pathname === '/team') {
       const el = document.getElementById(branchSlug) ||
-                 document.getElementById(`${branchSlug}-team`) ||
-                 (branchSlug === 'communication' ? document.getElementById('media-team') : null);
+                 document.getElementById(`${branchSlug}-team`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         window.history.pushState(null, '', `/team${targetHash}`);
@@ -37,30 +36,60 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <div className="nav-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', marginBottom: '16px', background: 'transparent' }}>
-            {/* Karnavati University Logo with white background badge for visibility */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '14px',
+              background: '#ffffff',
+              padding: '10px 20px',
+              borderRadius: '14px',
+              boxShadow: '0 4px 18px rgba(0, 0, 0, 0.22)',
+              marginBottom: '20px'
+            }}
+          >
+            {/* Karnavati University Logo */}
             <img
               src="/karnavati_logo.png"
               alt="Karnavati University"
               style={{
-                height: '42px',
+                height: '36px',
+                width: 'auto',
                 objectFit: 'contain',
-                background: '#ffffff',
-                padding: '4px 10px',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                background: 'transparent',
+                display: 'block'
               }}
             />
 
-            <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.25)' }}></div>
+            <div style={{ height: '24px', width: '1px', background: 'rgba(15, 27, 60, 0.18)' }}></div>
 
             {/* UIT Logo */}
-            <img src="/uit_logo.png" alt="UIT" style={{ height: '42px', objectFit: 'contain', background: 'transparent' }} />
+            <img
+              src="/uit_logo.png"
+              alt="UIT"
+              style={{
+                height: '30px',
+                width: 'auto',
+                objectFit: 'contain',
+                background: 'transparent',
+                display: 'block'
+              }}
+            />
 
-            <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.25)' }}></div>
+            <div style={{ height: '24px', width: '1px', background: 'rgba(15, 27, 60, 0.18)' }}></div>
 
             {/* AAYAM Logo */}
-            <img src="/aayam_logo.png" alt="AAYAM" style={{ height: '42px', objectFit: 'contain', background: 'transparent' }} />
+            <img
+              src="/aayam_logo.png"
+              alt="AAYAM"
+              style={{
+                height: '36px',
+                width: 'auto',
+                objectFit: 'contain',
+                background: 'transparent',
+                display: 'block'
+              }}
+            />
           </div>
           <p>AAYAM UIT Student Committee — Building Leaders, Creating Impact.</p>
           <div className="footer-socials">

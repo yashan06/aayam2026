@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// 8 official team category sections
+// 9 official team category sections
 const TEAM_SECTIONS = [
   { id: 'President', title: 'President', subtitle: 'STUDENT BODY LEADERSHIP & APEX DIRECTION' },
   { id: 'Head', title: 'Head', subtitle: 'EXECUTIVE LEADERSHIP & COMMITTEE HEADS' },
@@ -9,6 +9,7 @@ const TEAM_SECTIONS = [
   { id: 'Sports Team', title: 'Sports Team', subtitle: 'TOURNAMENTS, ATHLETICS & FITNESS' },
   { id: 'Cultural Team', title: 'Cultural Team', subtitle: 'PERFORMING ARTS, MUSIC & FESTIVALS' },
   { id: 'Media Team', title: 'Media Team', subtitle: 'PHOTOGRAPHY, CREATIVE DESIGN & BRANDING' },
+  { id: 'Communication Team', title: 'Communication Team', subtitle: 'PUBLIC RELATIONS, OUTREACH & STUDENT ENGAGEMENT' },
   { id: 'Technical Team', title: 'Technical Team', subtitle: 'WEB DEVELOPMENT, HACKATHONS & TECH LABS' },
   { id: 'Hospitality Team', title: 'Hospitality Team', subtitle: 'GUEST WELCOME, RECEPTION & VIP MANAGEMENT' }
 ];
@@ -33,8 +34,7 @@ export default function Team() {
       const scrollToTarget = () => {
         const el = document.getElementById(cleanHash) ||
                    document.getElementById(`${cleanHash}-team`) ||
-                   document.getElementById(cleanHash.replace(/-team$/, '')) ||
-                   (cleanHash === 'communication' ? document.getElementById('media-team') : null);
+                   document.getElementById(cleanHash.replace(/-team$/, ''));
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -81,7 +81,10 @@ export default function Team() {
         return c === 'cultural team' || c === 'cultural' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('cultural'));
       }
       if (target === 'media team') {
-        return c === 'media team' || c === 'media' || c === 'media & design' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('media'));
+        return (c === 'media team' || c === 'media' || c === 'media & design' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('media'))) && !c.includes('communication');
+      }
+      if (target === 'communication team') {
+        return c === 'communication team' || c === 'communication' || c === 'pr' || c === 'communications' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('communication'));
       }
       if (target === 'technical team') {
         return c === 'technical team' || c === 'technical' || c === 'tech' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('technical'));
@@ -288,12 +291,9 @@ export default function Team() {
                 scrollMarginTop: '110px'
               }}
             >
-              {/* Invisible anchor target for short slugs e.g. #media, #sports, #management */}
+              {/* Invisible anchor target for short slugs e.g. #media, #sports, #communication */}
               {shortSlug !== sectionSlug && (
                 <span id={shortSlug} style={{ display: 'block', position: 'relative', top: '-110px', visibility: 'hidden' }} />
-              )}
-              {shortSlug === 'media' && (
-                <span id="communication" style={{ display: 'block', position: 'relative', top: '-110px', visibility: 'hidden' }} />
               )}
               <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
                 

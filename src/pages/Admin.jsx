@@ -1058,7 +1058,7 @@ export default function Admin() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: '20px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 800 }}>👥 Team Members Management</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 8 official team categories matching the public website.</p>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 9 official team categories matching the public website.</p>
               </div>
               <button
                 onClick={() => {
@@ -1072,7 +1072,7 @@ export default function Admin() {
               </button>
             </div>
 
-            {/* 8 TEAM CATEGORIES SECTIONS */}
+            {/* 9 TEAM CATEGORIES SECTIONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
               {[
                 { id: 'President', title: 'President', icon: '👑', subtitle: 'Student Body Leadership & Apex Direction' },
@@ -1081,6 +1081,7 @@ export default function Admin() {
                 { id: 'Sports Team', title: 'Sports Team', icon: '⚽', subtitle: 'Inter-College Tournaments & Athletics' },
                 { id: 'Cultural Team', title: 'Cultural Team', icon: '🎭', subtitle: 'Performing Arts, Stage & Music' },
                 { id: 'Media Team', title: 'Media Team', icon: '📸', subtitle: 'Photography, Video & Creative Design' },
+                { id: 'Communication Team', title: 'Communication Team', icon: '📢', subtitle: 'Public Relations, Outreach & Student Engagement' },
                 { id: 'Technical Team', title: 'Technical Team', icon: '💻', subtitle: 'Web Portals, Hackathons & Tech Labs' },
                 { id: 'Hospitality Team', title: 'Hospitality Team', icon: '🤝', subtitle: 'Guest Welcome, Reception & VIP Management' }
               ].map(sec => {
@@ -1093,7 +1094,8 @@ export default function Admin() {
                   if (target === 'management team') return c === 'management team' || c === 'management' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('management'));
                   if (target === 'sports team') return c === 'sports team' || c === 'sports' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('sports'));
                   if (target === 'cultural team') return c === 'cultural team' || c === 'cultural' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('cultural'));
-                  if (target === 'media team') return c === 'media team' || c === 'media' || c === 'media & design' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('media'));
+                  if (target === 'media team') return (c === 'media team' || c === 'media' || c === 'media & design' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('media'))) && !c.includes('communication');
+                  if (target === 'communication team') return c === 'communication team' || c === 'communication' || c === 'pr' || c === 'communications' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('communication'));
                   if (target === 'technical team') return c === 'technical team' || c === 'technical' || c === 'tech' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('technical'));
                   if (target === 'hospitality team') return c === 'hospitality team' || c === 'hospitality' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('hospitality'));
                   return c === target;
@@ -1443,6 +1445,7 @@ export default function Admin() {
                     <option value="Sports Team">Sports Team</option>
                     <option value="Cultural Team">Cultural Team</option>
                     <option value="Media Team">Media Team</option>
+                    <option value="Communication Team">Communication Team</option>
                     <option value="Technical Team">Technical Team</option>
                     <option value="Hospitality Team">Hospitality Team</option>
                   </select>
@@ -1698,6 +1701,7 @@ export default function Admin() {
                     <option value="Sports Team">Sports Team</option>
                     <option value="Cultural Team">Cultural Team</option>
                     <option value="Media Team">Media Team</option>
+                    <option value="Communication Team">Communication Team</option>
                     <option value="Technical Team">Technical Team</option>
                     <option value="Hospitality Team">Hospitality Team</option>
                   </select>
