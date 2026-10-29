@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-// 7 official team category sections
+// 8 official team category sections
 const TEAM_SECTIONS = [
+  { id: 'President', title: 'President', subtitle: 'STUDENT BODY LEADERSHIP & APEX DIRECTION' },
   { id: 'Head', title: 'Head', subtitle: 'EXECUTIVE LEADERSHIP & COMMITTEE HEADS' },
   { id: 'Management Team', title: 'Management Team', subtitle: 'OPERATIONS, LOGISTICS & PLANNING' },
   { id: 'Sports Team', title: 'Sports Team', subtitle: 'TOURNAMENTS, ATHLETICS & FITNESS' },
@@ -42,9 +43,13 @@ export default function Team() {
   const getMembersByCategory = (catId) => {
     return teamList.filter(m => {
       const c = (m.category || '').toLowerCase().trim();
+      const role = (m.role || '').toLowerCase().trim();
       const target = catId.toLowerCase().trim();
+      if (target === 'president') {
+        return c === 'president' || c === 'presidents' || role === 'president';
+      }
       if (target === 'head') {
-        return c === 'head' || c === 'leadership' || c === 'executive';
+        return (c === 'head' || c === 'leadership' || c === 'executive') && c !== 'president' && role !== 'president';
       }
       if (target === 'management team') {
         return c === 'management team' || c === 'management' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('management'));

@@ -1058,11 +1058,11 @@ export default function Admin() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: '20px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 800 }}>👥 Team Members Management</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 6 official team categories matching the public website.</p>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 8 official team categories matching the public website.</p>
               </div>
               <button
                 onClick={() => {
-                  setNewTeamMember({ name: '', role: '', category: 'Head', branch_title: '', description: '', image: '', icon: '👤' });
+                  setNewTeamMember({ name: '', role: '', category: 'President', branch_title: '', description: '', image: '', icon: '👑', linkedin_url: '', email: '', instagram_url: '' });
                   setShowAddTeamMember(true);
                 }}
                 className="btn-primary"
@@ -1072,10 +1072,11 @@ export default function Admin() {
               </button>
             </div>
 
-            {/* 7 TEAM CATEGORIES SECTIONS */}
+            {/* 8 TEAM CATEGORIES SECTIONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
               {[
-                { id: 'Head', title: 'Head', icon: '👑', subtitle: 'Executive Board & Committee Heads' },
+                { id: 'President', title: 'President', icon: '👑', subtitle: 'Student Body Leadership & Apex Direction' },
+                { id: 'Head', title: 'Head', icon: '⭐', subtitle: 'Executive Board & Committee Heads' },
                 { id: 'Management Team', title: 'Management Team', icon: '💼', subtitle: 'Operations, Logistics & Event Planning' },
                 { id: 'Sports Team', title: 'Sports Team', icon: '⚽', subtitle: 'Inter-College Tournaments & Athletics' },
                 { id: 'Cultural Team', title: 'Cultural Team', icon: '🎭', subtitle: 'Performing Arts, Stage & Music' },
@@ -1085,8 +1086,10 @@ export default function Admin() {
               ].map(sec => {
                 const members = teamList.filter(m => {
                   const c = (m.category || '').toLowerCase().trim();
+                  const role = (m.role || '').toLowerCase().trim();
                   const target = sec.id.toLowerCase().trim();
-                  if (target === 'head') return c === 'head' || c === 'leadership' || c === 'executive';
+                  if (target === 'president') return c === 'president' || c === 'presidents' || role === 'president';
+                  if (target === 'head') return (c === 'head' || c === 'leadership' || c === 'executive') && c !== 'president' && role !== 'president';
                   if (target === 'management team') return c === 'management team' || c === 'management' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('management'));
                   if (target === 'sports team') return c === 'sports team' || c === 'sports' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('sports'));
                   if (target === 'cultural team') return c === 'cultural team' || c === 'cultural' || (c === 'branch_head' && (m.branch_title || '').toLowerCase().includes('cultural'));
@@ -1115,7 +1118,18 @@ export default function Admin() {
                       <button
                         type="button"
                         onClick={() => {
-                          setNewTeamMember({ name: '', role: '', category: sec.id, branch_title: sec.title, description: '', image: '', icon: '👤' });
+                          setNewTeamMember({
+                            name: '',
+                            role: sec.id === 'President' ? 'President' : '',
+                            category: sec.id,
+                            branch_title: sec.title,
+                            description: '',
+                            image: '',
+                            icon: sec.id === 'President' ? '👑' : '👤',
+                            linkedin_url: '',
+                            email: '',
+                            instagram_url: ''
+                          });
                           setShowAddTeamMember(true);
                         }}
                         style={{
@@ -1407,7 +1421,7 @@ export default function Admin() {
                 {/* 3. Team Category Dropdown */}
                 <div>
                   <select
-                    value={newTeamMember.category || 'Head'}
+                    value={newTeamMember.category || 'President'}
                     onChange={(e) => setNewTeamMember({ ...newTeamMember, category: e.target.value })}
                     required
                     style={{
@@ -1423,6 +1437,7 @@ export default function Admin() {
                       fontWeight: 600
                     }}
                   >
+                    <option value="President">👑 President (Apex Leadership)</option>
                     <option value="Head">Head (Core Board)</option>
                     <option value="Management Team">Management Team</option>
                     <option value="Sports Team">Sports Team</option>
@@ -1458,12 +1473,17 @@ export default function Admin() {
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => setNewTeamMember({ ...newTeamMember, image: reader.result });
-                            reader.readAsDataURL(file);
+                            try {
+                              const compressed = await compressImage(file, 800, 800, 0.85);
+                              setNewTeamMember(prev => ({ ...prev, image: compressed }));
+                            } catch (err) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => setNewTeamMember(prev => ({ ...prev, image: reader.result }));
+                              reader.readAsDataURL(file);
+                            }
                           }
                         }}
                       />
@@ -1656,7 +1676,7 @@ export default function Admin() {
                 {/* Team Category Dropdown */}
                 <div>
                   <select
-                    value={editingTeamMember.category || 'Head'}
+                    value={editingTeamMember.category || 'President'}
                     onChange={(e) => setEditingTeamMember({ ...editingTeamMember, category: e.target.value })}
                     required
                     style={{
@@ -1672,6 +1692,7 @@ export default function Admin() {
                       fontWeight: 600
                     }}
                   >
+                    <option value="President">👑 President (Apex Leadership)</option>
                     <option value="Head">Head (Core Board)</option>
                     <option value="Management Team">Management Team</option>
                     <option value="Sports Team">Sports Team</option>
@@ -1770,12 +1791,17 @@ export default function Admin() {
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => setEditingTeamMember({ ...editingTeamMember, image: reader.result });
-                            reader.readAsDataURL(file);
+                            try {
+                              const compressed = await compressImage(file, 800, 800, 0.85);
+                              setEditingTeamMember(prev => ({ ...prev, image: compressed }));
+                            } catch (err) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => setEditingTeamMember(prev => ({ ...prev, image: reader.result }));
+                              reader.readAsDataURL(file);
+                            }
                           }
                         }}
                       />

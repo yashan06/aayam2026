@@ -729,11 +729,13 @@ app.patch('/api/admin/events/:id/feature', authAdmin, async (req, res) => {
 // Public: Get Team Members
 app.get('/api/team', async (req, res) => {
   try {
-    const cached = getCached('team_all');
-    if (cached) return res.json(cached);
+    if (!req.query._t) {
+      const cached = getCached('team_all');
+      if (cached) return res.json(cached);
+    }
 
     const team = await dbAll(`SELECT * FROM team_members ORDER BY display_order ASC, id ASC`);
-    const leadership = team.filter(m => m.category === 'leadership');
+    const leadership = team.filter(m => m.category === 'leadership' || m.category === 'President' || m.category === 'Head');
     const branches = team.filter(m => m.category === 'branch_head');
     const result = { success: true, team, leadership, branches };
     setCached('team_all', result);
@@ -764,7 +766,7 @@ app.post('/api/admin/team', authAdmin, async (req, res) => {
     const result = await dbRun(
       `INSERT INTO team_members (name, role, category, branch_title, description, image, icon, linkedin_url, email, instagram_url, display_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0]
+      [name, role, category || 'President', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0]
     );
 
     clearCachePrefix('team');
