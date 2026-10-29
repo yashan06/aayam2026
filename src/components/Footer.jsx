@@ -156,11 +156,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
-      <div className="footer-bottom">
-        <p>© 2026 AAYAM UIT Student Committee. All Rights Reserved.</p>
-        <p>Designed with <span className="heart">♥</span> for students, by students.</p>
-      </div>
     </footer>
   );
 }

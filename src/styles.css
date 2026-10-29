@@ -778,8 +778,8 @@ button { cursor: pointer; font-family: inherit; }
 /* =============================================
    FOOTER
    ============================================= */
-.footer { background: var(--navy); color: var(--white); padding: 60px 40px 0; }
-.footer-inner { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.footer { background: var(--navy); color: var(--white); padding: 60px 40px 50px; }
+.footer-inner { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
 .footer-brand .nav-brand { margin-bottom: 16px; }
 .footer-brand .nav-brand .uit-text { color: var(--white); }
 .footer-brand p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; margin-bottom: 20px; }
