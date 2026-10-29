@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -10,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aayam_uit_secret_key_2026_secure';
 const ADMIN_PASSCODE = 'aayam2026admin'; // Secret code required for Admin self-registration
 
-// Middleware
+// Performance & Compression Middleware
+app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -45,9 +47,19 @@ const clearCachePrefix = (prefix) => {
 // - Auth, Admin & Mutations: strictly no-store
 // - Public read-only GET endpoints: fast edge & browser caching with stale-while-revalidate
 app.use('/api', (req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  const isPublicGet = req.method === 'GET' &&
+    !req.path.startsWith('/admin') &&
+    !req.path.startsWith('/auth') &&
+    !req.path.startsWith('/messages') &&
+    !req.path.startsWith('/volunteers/admin');
+
+  if (isPublicGet) {
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
+  } else {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
   next();
 });
 

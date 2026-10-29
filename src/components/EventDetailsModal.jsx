@@ -199,6 +199,7 @@ export default function EventDetailsModal({ isOpen, onClose, event, onRegister }
             <img
               src={slides[currentSlideIndex]}
               alt={event.title}
+              decoding="async"
               style={{
                 maxHeight: '100%',
                 maxWidth: '100%',

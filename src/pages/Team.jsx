@@ -340,6 +340,8 @@ export default function Team() {
                             <img
                               src={item.image}
                               alt={item.name}
+                              loading="lazy"
+                              decoding="async"
                               className="team-avatar-img"
                               style={{
                                 width: '124px',
@@ -553,6 +555,7 @@ export default function Team() {
                 <img
                   src={selectedMember.image}
                   alt={selectedMember.name}
+                  decoding="async"
                   style={{
                     width: '140px',
                     height: '140px',

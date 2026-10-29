@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { compressImage } from '../utils/imageCompressor';
 
 export default function EventDetailsForm({ eventData, setEventData, onSubmit, onCancel, submitBtnText = 'Save Event Details' }) {
   const [activeTab, setActiveTab] = useState('general'); // 'general', 'description', 'media', 'schedule', 'custom_fields'
@@ -44,25 +45,15 @@ export default function EventDetailsForm({ eventData, setEventData, onSubmit, on
   const visibility = eventData.visibility || 'public';
 
   // Slideshow upload handler
-  const handleSlideshowUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const handleSlideshowUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     const currentSlides = getArrayField('slideshow_images');
-    const newSlides = [...currentSlides];
-
-    let processed = 0;
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newSlides.push(reader.result);
-        processed++;
-        if (processed === files.length) {
-          updateArrayField('slideshow_images', newSlides);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    const compressedSlides = await Promise.all(
+      files.map(file => compressImage(file, 1280, 1280, 0.80))
+    );
+    updateArrayField('slideshow_images', [...currentSlides, ...compressedSlides]);
   };
 
   const removeSlide = (idx) => {
@@ -425,12 +416,11 @@ export default function EventDetailsForm({ eventData, setEventData, onSubmit, on
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
+                      onChange={async (e) => {
+                        const file = e.target.files && e.target.files[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => setEventData({ ...eventData, image: reader.result });
-                          reader.readAsDataURL(file);
+                          const compressed = await compressImage(file, 1280, 1280, 0.80);
+                          setEventData({ ...eventData, image: compressed });
                         }
                       }}
                     />

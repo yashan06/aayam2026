@@ -1923,12 +1923,11 @@ export default function Admin() {
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
+                        onChange={async (e) => {
+                          const file = e.target.files && e.target.files[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => setNewGalleryItem({ ...newGalleryItem, image: reader.result });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImage(file, 1280, 1280, 0.80);
+                            setNewGalleryItem({ ...newGalleryItem, image: compressed });
                           }
                         }}
                       />
@@ -1985,12 +1984,11 @@ export default function Admin() {
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
+                        onChange={async (e) => {
+                          const file = e.target.files && e.target.files[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => setEditingGalleryItem({ ...editingGalleryItem, image: reader.result });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImage(file, 1280, 1280, 0.80);
+                            setEditingGalleryItem({ ...editingGalleryItem, image: compressed });
                           }
                         }}
                       />

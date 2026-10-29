@@ -52,6 +52,8 @@ export default function Footer() {
             <img
               src="/karnavati_logo.png"
               alt="Karnavati University"
+              loading="lazy"
+              decoding="async"
               style={{
                 height: '36px',
                 width: 'auto',
@@ -67,6 +69,8 @@ export default function Footer() {
             <img
               src="/uit_logo.png"
               alt="UIT"
+              loading="lazy"
+              decoding="async"
               style={{
                 height: '30px',
                 width: 'auto',
@@ -82,6 +86,8 @@ export default function Footer() {
             <img
               src="/aayam_logo.png"
               alt="AAYAM"
+              loading="lazy"
+              decoding="async"
               style={{
                 height: '36px',
                 width: 'auto',

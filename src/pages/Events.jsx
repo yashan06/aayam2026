@@ -323,6 +323,7 @@ export default function Events() {
                 <img
                   src={featuredEvent.image || '/equinox_event.png'}
                   alt={featuredEvent.title}
+                  decoding="async"
                   style={{ width: '100%', height: '340px', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                 />
                 <div style={{
@@ -410,7 +411,7 @@ export default function Events() {
                       }}
                     >
                       {ev.image ? (
-                        <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={ev.image} alt={ev.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div className="event-banner-overlay" style={{ opacity: 1, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
                           <div className="event-name" style={{ fontSize: '20px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{ev.title}</div>

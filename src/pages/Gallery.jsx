@@ -111,10 +111,12 @@ export default function Gallery() {
                   onClick={() => openLightbox(item.image, item.title, item.category)}
                   style={{ background: 'var(--white)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)' }}
                 >
-                  <div style={{ height: '230px', overflow: 'hidden', position: 'relative', background: 'var(--navy)' }}>
+                  <div style={{ height: '230px', overflow: 'hidden', position: 'relative', background: '#0f172a' }}>
                     <img
                       src={item.image}
                       alt={item.title}
+                      loading="lazy"
+                      decoding="async"
                       style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                     />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(15,27,60,0.75) 100%)', opacity: 0, transition: 'opacity 0.3s ease' }} className="img-overlay" />
@@ -137,7 +139,7 @@ export default function Gallery() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,60,0.92)', backdropFilter: 'blur(12px)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
         >
           <button onClick={closeLightbox} style={{ position: 'absolute', top: '24px', right: '32px', color: '#fff', fontSize: '36px', background: 'none', border: 'none', cursor: 'pointer' }}>&times;</button>
-          <img src={lightbox.imgSrc} alt={lightbox.title} style={{ maxWidth: '90%', maxHeight: '75vh', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', border: '2px solid rgba(200, 146, 42, 0.4)' }} />
+          <img src={lightbox.imgSrc} alt={lightbox.title} decoding="async" style={{ maxWidth: '90%', maxHeight: '75vh', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', border: '2px solid rgba(200, 146, 42, 0.4)' }} />
           <div style={{ color: 'var(--gold-pale)', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginTop: '16px' }}>{lightbox.category}</div>
           <div style={{ color: '#fff', fontFamily: "'Playfair Display',serif", fontSize: '24px', fontWeight: 700, marginTop: '4px' }}>{lightbox.title}</div>
         </div>

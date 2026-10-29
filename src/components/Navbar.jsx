@@ -38,6 +38,7 @@ export default function Navbar() {
             <img
               src="/karnavati_logo.png"
               alt="Karnavati University"
+              decoding="async"
               style={{
                 height: scrolled ? '36px' : '44px',
                 width: 'auto',
@@ -62,6 +63,7 @@ export default function Navbar() {
             <img
               src="/uit_logo.png"
               alt="UIT"
+              decoding="async"
               style={{
                 height: scrolled ? '30px' : '36px',
                 width: 'auto',
@@ -86,6 +88,7 @@ export default function Navbar() {
             <img
               src="/aayam_logo.png"
               alt="AAYAM"
+              decoding="async"
               style={{
                 height: scrolled ? '36px' : '44px',
                 width: 'auto',

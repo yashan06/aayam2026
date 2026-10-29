@@ -231,7 +231,7 @@ export default function Home() {
                   >
                     <div className="event-banner" style={{ position: 'relative', height: '200px', ...(!ev.image ? { background: 'linear-gradient(135deg,#0f1b3c,#1a3060)' } : {}) }}>
                       {ev.image ? (
-                        <img src={ev.image} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={ev.image} alt={ev.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div className="event-banner-overlay" style={{ opacity: 1, background: 'linear-gradient(135deg,rgba(15,27,60,0.9),rgba(15,27,60,0.6))' }}>
                           <div className="event-name">{ev.title}</div>
@@ -425,6 +425,8 @@ export default function Home() {
                   <img
                     src={item.image}
                     alt={item.title || 'Moments That Matter'}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',

@@ -119,6 +119,7 @@ export default function EventDetailsView({ event, onBack, onRegister }) {
           <img
             src={slides[currentSlideIndex]}
             alt={event.title}
+            decoding="async"
             style={{
               width: '100%',
               height: '100%',
