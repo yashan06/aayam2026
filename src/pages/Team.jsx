@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 // 8 official team category sections
 const TEAM_SECTIONS = [
@@ -16,6 +17,7 @@ const TEAM_SECTIONS = [
 let cachedTeamList = null;
 
 export default function Team() {
+  const location = useLocation();
   const [teamList, setTeamList] = useState(() => cachedTeamList || []);
   const [loading, setLoading] = useState(() => !cachedTeamList);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -23,6 +25,24 @@ export default function Team() {
   useEffect(() => {
     fetchTeam();
   }, []);
+
+  // Smooth scroll to targeted branch section when hash exists in URL
+  useEffect(() => {
+    if (!loading && location.hash) {
+      const cleanHash = decodeURIComponent(location.hash.slice(1)).toLowerCase().trim();
+      const scrollToTarget = () => {
+        const el = document.getElementById(cleanHash) ||
+                   document.getElementById(`${cleanHash}-team`) ||
+                   document.getElementById(cleanHash.replace(/-team$/, '')) ||
+                   (cleanHash === 'communication' ? document.getElementById('media-team') : null);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      const timer = setTimeout(scrollToTarget, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, location.hash]);
 
   const fetchTeam = async () => {
     try {
@@ -254,16 +274,27 @@ export default function Team() {
         TEAM_SECTIONS.map((sec, index) => {
           const members = getMembersByCategory(sec.id);
           const isEven = index % 2 === 0;
+          const sectionSlug = sec.id.toLowerCase().replace(/\s+/g, '-');
+          const shortSlug = sec.id.toLowerCase().replace(/\s+team$/i, '');
 
           return (
             <section
               key={sec.id}
+              id={sectionSlug}
               style={{
                 padding: '60px 24px 80px',
                 background: isEven ? 'var(--cream)' : 'var(--cream-dark)',
-                borderTop: index > 0 ? '1px solid var(--border)' : 'none'
+                borderTop: index > 0 ? '1px solid var(--border)' : 'none',
+                scrollMarginTop: '110px'
               }}
             >
+              {/* Invisible anchor target for short slugs e.g. #media, #sports, #management */}
+              {shortSlug !== sectionSlug && (
+                <span id={shortSlug} style={{ display: 'block', position: 'relative', top: '-110px', visibility: 'hidden' }} />
+              )}
+              {shortSlug === 'media' && (
+                <span id="communication" style={{ display: 'block', position: 'relative', top: '-110px', visibility: 'hidden' }} />
+              )}
               <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
                 
                 {/* Category Header with Decorative Underline Rule */}

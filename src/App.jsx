@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 // Eager load core user-facing pages for instant navigation without route-transition spinners
 import Home from './pages/Home';
@@ -24,6 +25,7 @@ export default function App() {
 
   return (
     <div className="app-root">
+      <ScrollToTop />
       {!isStandalonePage && <Navbar />}
       
       <Suspense fallback={

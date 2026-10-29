@@ -1,7 +1,38 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function Footer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Scroll to top when clicking any Quick Link
+  const handleQuickLink = (path) => {
+    if (location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  };
+
+  // Scroll directly to the core branch team section on the Team page
+  const handleBranchClick = (e, branchSlug) => {
+    e.preventDefault();
+    const targetHash = `#${branchSlug}`;
+    if (location.pathname === '/team') {
+      const el = document.getElementById(branchSlug) ||
+                 document.getElementById(`${branchSlug}-team`) ||
+                 (branchSlug === 'communication' ? document.getElementById('media-team') : null);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState(null, '', `/team${targetHash}`);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      navigate(`/team${targetHash}`);
+    }
+  };
+
   return (
     <footer className="footer">
       <div className="footer-inner">
@@ -61,24 +92,24 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Quick Links</h4>
           <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/events">Events</Link></li>
-            <li><Link to="/team">Our Team</Link></li>
-            <li><Link to="/gallery">Gallery</Link></li>
-            <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/" onClick={() => handleQuickLink('/')}>Home</Link></li>
+            <li><Link to="/events" onClick={() => handleQuickLink('/events')}>Events</Link></li>
+            <li><Link to="/team" onClick={() => handleQuickLink('/team')}>Our Team</Link></li>
+            <li><Link to="/gallery" onClick={() => handleQuickLink('/gallery')}>Gallery</Link></li>
+            <li><Link to="/contact" onClick={() => handleQuickLink('/contact')}>Contact Us</Link></li>
           </ul>
         </div>
 
         <div className="footer-col">
           <h4>Our Core Branches</h4>
           <ul>
-            <li><a href="#">Management</a></li>
-            <li><a href="#">Media</a></li>
-            <li><a href="#">Technical</a></li>
-            <li><a href="#">Sports</a></li>
-            <li><a href="#">Cultural</a></li>
-            <li><a href="#">Communication</a></li>
-            <li><a href="#">Hospitality</a></li>
+            <li><Link to="/team#management" onClick={(e) => handleBranchClick(e, 'management')}>Management</Link></li>
+            <li><Link to="/team#media" onClick={(e) => handleBranchClick(e, 'media')}>Media</Link></li>
+            <li><Link to="/team#technical" onClick={(e) => handleBranchClick(e, 'technical')}>Technical</Link></li>
+            <li><Link to="/team#sports" onClick={(e) => handleBranchClick(e, 'sports')}>Sports</Link></li>
+            <li><Link to="/team#cultural" onClick={(e) => handleBranchClick(e, 'cultural')}>Cultural</Link></li>
+            <li><Link to="/team#communication" onClick={(e) => handleBranchClick(e, 'communication')}>Communication</Link></li>
+            <li><Link to="/team#hospitality" onClick={(e) => handleBranchClick(e, 'hospitality')}>Hospitality</Link></li>
           </ul>
         </div>
 
