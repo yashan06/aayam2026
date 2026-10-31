@@ -801,7 +801,7 @@ app.put('/api/admin/team/:id', authAdmin, async (req, res) => {
     await dbRun(
       `UPDATE team_members SET name = ?, role = ?, category = ?, branch_title = ?, description = ?, image = ?, icon = ?, linkedin_url = ?, email = ?, instagram_url = ?, display_order = ?
        WHERE id = ?`,
-      [name, role, category || 'Head', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0, req.params.id]
+      [name, role, category || 'President', branch_title || '', description || '', image || '', icon || '👤', linkedin_url || '', email || '', instagram_url || '', display_order || 0, req.params.id]
     );
 
     clearCachePrefix('team');

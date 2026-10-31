@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// 9 official team category sections
+// 8 official team category sections
 const TEAM_SECTIONS = [
   { id: 'President', title: 'President', subtitle: 'STUDENT BODY LEADERSHIP & APEX DIRECTION' },
-  { id: 'Head', title: 'Head', subtitle: 'EXECUTIVE LEADERSHIP & COMMITTEE HEADS' },
   { id: 'Management Team', title: 'Management Team', subtitle: 'OPERATIONS, LOGISTICS & PLANNING' },
   { id: 'Sports Team', title: 'Sports Team', subtitle: 'TOURNAMENTS, ATHLETICS & FITNESS' },
   { id: 'Cultural Team', title: 'Cultural Team', subtitle: 'PERFORMING ARTS, MUSIC & FESTIVALS' },

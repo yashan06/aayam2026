@@ -1058,7 +1058,7 @@ export default function Admin() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: '20px', color: 'var(--navy)', fontFamily: "'Playfair Display',serif", fontWeight: 800 }}>👥 Team Members Management</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 9 official team categories matching the public website.</p>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Manage student leaders grouped into 8 official team categories matching the public website.</p>
               </div>
               <button
                 onClick={() => {
@@ -1072,11 +1072,10 @@ export default function Admin() {
               </button>
             </div>
 
-            {/* 9 TEAM CATEGORIES SECTIONS */}
+            {/* 8 TEAM CATEGORIES SECTIONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
               {[
                 { id: 'President', title: 'President', icon: '👑', subtitle: 'Student Body Leadership & Apex Direction' },
-                { id: 'Head', title: 'Head', icon: '⭐', subtitle: 'Executive Board & Committee Heads' },
                 { id: 'Management Team', title: 'Management Team', icon: '💼', subtitle: 'Operations, Logistics & Event Planning' },
                 { id: 'Sports Team', title: 'Sports Team', icon: '⚽', subtitle: 'Inter-College Tournaments & Athletics' },
                 { id: 'Cultural Team', title: 'Cultural Team', icon: '🎭', subtitle: 'Performing Arts, Stage & Music' },
@@ -1440,7 +1439,6 @@ export default function Admin() {
                     }}
                   >
                     <option value="President">👑 President (Apex Leadership)</option>
-                    <option value="Head">Head (Core Board)</option>
                     <option value="Management Team">Management Team</option>
                     <option value="Sports Team">Sports Team</option>
                     <option value="Cultural Team">Cultural Team</option>
@@ -1696,7 +1694,6 @@ export default function Admin() {
                     }}
                   >
                     <option value="President">👑 President (Apex Leadership)</option>
-                    <option value="Head">Head (Core Board)</option>
                     <option value="Management Team">Management Team</option>
                     <option value="Sports Team">Sports Team</option>
                     <option value="Cultural Team">Cultural Team</option>
